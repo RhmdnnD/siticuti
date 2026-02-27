@@ -14,9 +14,23 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->string('username')->unique();
+            $table->string('nip')->nullable()->unique();
             $table->string('password');
+            $table->enum('role', ['admin', 'asn'])->default('asn');
+            $table->string('jabatan')->nullable();
+            $table->string('pangkat_gol')->nullable();
+            $table->string('telepon')->nullable();
+            
+            $table->integer('masa_kerja_tahun')->default(0);
+            $table->integer('masa_kerja_bulan')->default(0);
+            $table->integer('sisa_cuti_tahun_ini')->default(12);
+            $table->integer('sisa_cuti_tahun_lalu')->default(0);
+            $table->integer('cuti_diambil')->default(0);
+
+            $table->string('atasan1')->nullable();
+            $table->string('atasan2')->nullable();
+
             $table->rememberToken();
             $table->timestamps();
         });

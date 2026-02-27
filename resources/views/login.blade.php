@@ -56,7 +56,8 @@
             <p class="text-gray-500">DLH Kota Tanjungpinang</p>
         </div>
 
-        <form id="loginForm" class="space-y-6">
+        <form action="{{ url('/login') }}" method="POST" class="space-y-6">
+            @csrf
             <div>
                 <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
                 <div class="mt-1">
@@ -71,7 +72,11 @@
                 </div>
             </div>
             
-            <div id="errorMessage" class="hidden text-red-500 text-sm text-center">Username atau password salah!</div>
+            @if($errors->any())
+                <div class="text-red-500 text-sm text-center font-semibold">
+                    {{ $errors->first() }}
+                </div>
+            @endif
 
             <div>
                 <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white bg-hijau-500 hover:bg-hijau-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-hijau-500">
@@ -94,59 +99,6 @@
     </div>
     
     <script src="{{ asset('js/app.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Bersihkan data sesi lama
-            localStorage.removeItem('loggedInUser');
-            
-            const loginForm = document.getElementById('loginForm');
-            const errorMessage = document.getElementById('errorMessage');
-
-            loginForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                
-                // Sembunyikan pesan error sebelumnya
-                errorMessage.classList.add('hidden');
-
-                // Panggil API Login PHP
-                fetch('api/login.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        password: password
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        // Simpan data user ke localStorage (Hanya untuk sesi browser, bukan database utama)
-                        localStorage.setItem('loggedInUser', JSON.stringify(data.data));
-                        
-                        // Redirect sesuai role
-                        if (data.data.role === 'admin') {
-                            window.location.href = 'admin.html';
-                        } else {
-                            window.location.href = 'index.html';
-                        }
-                    } else {
-                        // Tampilkan pesan error
-                        errorMessage.textContent = data.message;
-                        errorMessage.classList.remove('hidden');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    errorMessage.textContent = 'Terjadi kesalahan koneksi server.';
-                    errorMessage.classList.remove('hidden');
-                });
-            });
-        });
-    </script>
 
 </body>
 </html>

@@ -1,11 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 
 // --- ROUTE UMUM / ASN ---
 Route::get('/', function () {
     return view('login');
-});
+})->name('login');
+
+Route::post('/login', [AuthController::class, 'login']);
+Route::get('/logout', [AuthController::class, 'logout']);
 
 Route::get('/dashboard', function () {
     return view('index');
