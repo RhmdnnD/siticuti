@@ -59,7 +59,7 @@
                 <a href="{{ url('/profil') }}" class="flex items-center px-4 py-2.5 text-white bg-hijau-500 rounded-lg font-semibold"><i class="bi bi-person-fill mr-3"></i> Profil Saya</a>
             </nav>
             <div class="p-4 mt-auto">
-                <a href="{{ url('/') }}" id="logoutButton" class="flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold"><i class="bi bi-box-arrow-right mr-3"></i> Logout</a>
+                <a href="{{ url('/logout') }}" id="logoutButton" class="flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold"><i class="bi bi-box-arrow-right mr-3"></i> Logout</a>
             </div>
         </aside>
 
@@ -144,11 +144,22 @@
             if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleMenu);
 
             // --- Existing Logic ---
-            const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-            if (!loggedInUser || loggedInUser.role !== 'asn') {
-                window.location.href = '{{ url('/') }}';
-                return;
+            const laravelUser = @json(auth()->user());
+            if (laravelUser) {
+                localStorage.setItem('loggedInUser', JSON.stringify({
+                    id: laravelUser.id,
+                    nama: laravelUser.name,
+                    nip: laravelUser.nip,
+                    role: laravelUser.role,
+                    jabatan: laravelUser.jabatan,
+                    sisaCuti: { 
+                        tahunIni: laravelUser.sisa_cuti_tahun_ini, 
+                        tahunLalu: laravelUser.sisa_cuti_tahun_lalu, 
+                        diambil: laravelUser.cuti_diambil 
+                    }
+                }));
             }
+            const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
 
             const dataAtasan = JSON.parse(localStorage.getItem('dataAtasan')) || [];
             const atasan1 = dataAtasan.find(a => a.nip === loggedInUser.atasan1);

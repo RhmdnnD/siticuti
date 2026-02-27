@@ -86,7 +86,7 @@
             </nav>
 
             <div class="p-4 mt-auto">
-                <a href="{{ url('/') }}" id="logoutButton" class="flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold"><i class="bi bi-box-arrow-right mr-3"></i> Logout</a>
+                <a href="{{ url('/logout') }}" id="logoutButton" class="flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold"><i class="bi bi-box-arrow-right mr-3"></i> Logout</a>
             </div>
         </aside>
 
@@ -233,11 +233,16 @@
             if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleMenu);
 
             // --- Existing Logic ---
-            const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-            if (!loggedInUser || loggedInUser.role !== 'admin') {
-                window.location.href = '{{ url('/') }}';
-                return;
+            const laravelUser = @json(auth()->user());
+            if (laravelUser) {
+                localStorage.setItem('loggedInUser', JSON.stringify({
+                    id: laravelUser.id,
+                    nama: laravelUser.name,
+                    username: laravelUser.username,
+                    role: laravelUser.role
+                }));
             }
+            const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
 
             document.getElementById('logoutButton').addEventListener('click', function() {
                 addActivityLog(`Logout sebagai Admin`);
