@@ -127,35 +127,64 @@
                         <h3 class="text-lg font-semibold text-gray-500">Menunggu</h3>
                         <div class="bg-kuning-100 text-kuning-700 p-2.5 rounded-lg"><i class="bi bi-clock-history text-xl"></i></div>
                     </div>
-                    <p id="totalMenunggu" class="text-4xl font-bold text-gray-800 mt-4">0</p>
+                    <p id="totalMenunggu" class="text-4xl font-bold text-gray-800 mt-4">{{ $totalMenunggu }}</p>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-500">Disetujui</h3>
                         <div class="bg-hijau-100 text-hijau-600 p-2.5 rounded-lg"><i class="bi bi-check-circle-fill text-xl"></i></div>
                     </div>
-                    <p id="totalDisetujui" class="text-4xl font-bold text-gray-800 mt-4">0</p>
+                    <p id="totalDisetujui" class="text-4xl font-bold text-gray-800 mt-4">{{ $totalDisetujui }}</p>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-500">Ditolak</h3>
                         <div class="bg-merah-100 text-merah-700 p-2.5 rounded-lg"><i class="bi bi-x-circle-fill text-xl"></i></div>
                     </div>
-                    <p id="totalDitolak" class="text-4xl font-bold text-gray-800 mt-4">0</p>
+                    <p id="totalDitolak" class="text-4xl font-bold text-gray-800 mt-4">{{ $totalDitolak }}</p>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-500">Total Pengajuan</h3>
                         <div class="bg-blue-100 text-blue-600 p-2.5 rounded-lg"><i class="bi bi-journal-text text-xl"></i></div>
                     </div>
-                    <p id="totalPengajuan" class="text-4xl font-bold text-gray-800 mt-4">0</p>
+                    <p id="totalPengajuan" class="text-4xl font-bold text-gray-800 mt-4">{{ $totalPengajuan }}</p>
                 </div>
             </div>
 
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <h3 class="text-xl font-bold text-gray-800 mb-4">Daftar Pengajuan Cuti Menunggu Persetujuan</h3>
                 <div class="overflow-x-auto">
-                    <ul id="daftarPengajuan" class="divide-y divide-slate-200"></ul>
+                    <ul id="daftarPengajuan" class="divide-y divide-slate-200">
+                        @forelse ($pengajuanMenunggu as $p)
+                            <li class="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 px-2">
+                                <div class="flex items-center gap-4 mb-3 sm:mb-0">
+                                    <img src="https://placehold.co/40x40/22c55e/FFFFFF?text={{ substr($p->user->name, 0, 1) }}" alt="User" class="w-10 h-10 rounded-full">
+                                    <div>
+                                        <p class="font-semibold text-gray-800">{{ $p->user->name }}</p>
+                                        <p class="text-sm text-gray-500">{{ $p->jenis_cuti }} &bull; {{ $p->durasi }} Hari</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 self-end sm:self-center">
+                                    <button title="Lihat Detail" class="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200"><i class="bi bi-eye-fill"></i></button>
+                                    
+                                    <form action="{{ url('/admin/cuti/'.$p->id.'/status') }}" method="POST" class="inline">
+                                        @csrf
+                                        <input type="hidden" name="action" value="tolak">
+                                        <button type="submit" onclick="return confirm('Yakin ingin menolak cuti ini?')" title="Tolak Pengajuan" class="px-3 py-1.5 rounded-lg bg-merah-100 text-merah-700 hover:bg-red-200 font-semibold flex items-center gap-1.5"><i class="bi bi-x-lg"></i> <span class="hidden sm:inline">Tolak</span></button>
+                                    </form>
+
+                                    <form action="{{ url('/admin/cuti/'.$p->id.'/status') }}" method="POST" class="inline">
+                                        @csrf
+                                        <input type="hidden" name="action" value="setujui">
+                                        <button type="submit" onclick="return confirm('Yakin ingin menyetujui cuti ini?')" title="Setujui Pengajuan" class="px-3 py-1.5 rounded-lg bg-hijau-100 text-hijau-700 hover:bg-hijau-200 font-semibold flex items-center gap-1.5"><i class="bi bi-check-lg"></i> <span class="hidden sm:inline">Setujui</span></button>
+                                    </form>
+                                </div>
+                            </li>
+                        @empty
+                            <li class="text-center p-4 text-gray-500">Tidak ada pengajuan cuti yang menunggu persetujuan.</li>
+                        @endforelse
+                    </ul>
                 </div>
             </div>
         </main>
@@ -252,46 +281,6 @@
             
             let pengajuanCuti = JSON.parse(localStorage.getItem('pengajuanCuti')) || [];
             let dataAsn = JSON.parse(localStorage.getItem('dataAsn')) || [];
-
-            function updateStatsAndRender() {
-                pengajuanCuti = JSON.parse(localStorage.getItem('pengajuanCuti')) || [];
-                dataAsn = JSON.parse(localStorage.getItem('dataAsn')) || [];
-
-                document.getElementById('totalPengajuan').textContent = pengajuanCuti.length;
-                document.getElementById('totalDisetujui').textContent = pengajuanCuti.filter(p => p.status === 'Disetujui').length;
-                document.getElementById('totalDitolak').textContent = pengajuanCuti.filter(p => p.status === 'Ditolak').length;
-                
-                const pengajuanMenunggu = pengajuanCuti.filter(p => p.status === 'Menunggu');
-                document.getElementById('totalMenunggu').textContent = pengajuanMenunggu.length;
-
-                const daftarPengajuanEl = document.getElementById('daftarPengajuan');
-                daftarPengajuanEl.innerHTML = '';
-
-                if (pengajuanMenunggu.length === 0) {
-                    daftarPengajuanEl.innerHTML = `<li class="text-center p-4 text-gray-500">Tidak ada pengajuan cuti yang menunggu persetujuan.</li>`;
-                    return;
-                }
-
-                pengajuanMenunggu.forEach(p => {
-                    const item = `
-                        <li class="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 px-2">
-                            <div class="flex items-center gap-4 mb-3 sm:mb-0">
-                                <img src="https://placehold.co/40x40/22c55e/FFFFFF?text=${p.nama.charAt(0)}" alt="User" class="w-10 h-10 rounded-full">
-                                <div>
-                                    <p class="font-semibold text-gray-800">${p.nama}</p>
-                                    <p class="text-sm text-gray-500">${p.jenis} &bull; ${p.durasi} Hari</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2 self-end sm:self-center">
-                                <button data-id="${p.id}" title="Lihat Detail" class="btn-detail p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200"><i class="bi bi-eye-fill"></i></button>
-                                <button data-id="${p.id}" title="Tolak Pengajuan" class="btn-tolak px-3 py-1.5 rounded-lg bg-merah-100 text-merah-700 hover:bg-red-200 font-semibold flex items-center gap-1.5"><i class="bi bi-x-lg"></i> <span class="hidden sm:inline">Tolak</span></button>
-                                <button data-id="${p.id}" title="Setujui Pengajuan" class="btn-setujui px-3 py-1.5 rounded-lg bg-hijau-100 text-hijau-700 hover:bg-hijau-200 font-semibold flex items-center gap-1.5"><i class="bi bi-check-lg"></i> <span class="hidden sm:inline">Setujui</span></button>
-                            </div>
-                        </li>
-                    `;
-                    daftarPengajuanEl.innerHTML += item;
-                });
-            }
             
             const modalDetail = document.getElementById('modalDetail');
             const closeModalDetail = document.getElementById('closeModalDetail');
@@ -548,7 +537,6 @@
                 closeReportModal();
             });
 
-            updateStatsAndRender();
         });
     </script>
 </body>

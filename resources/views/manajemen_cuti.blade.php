@@ -24,11 +24,9 @@
     </script>
 </head>
 <body class="font-sans bg-slate-50">
-    <!-- Overlay for mobile menu -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
 
     <div class="relative min-h-screen lg:flex">
-        <!-- Sidebar -->
         <aside id="sidebar" class="bg-white w-64 flex-col fixed inset-y-0 left-0 transform -translate-x-full transition-transform duration-300 ease-in-out z-50 lg:relative lg:translate-x-0 lg:flex border-r border-slate-200">
             <div class="h-20 flex items-center px-6">
                  <div class="flex items-center space-x-3">
@@ -50,15 +48,12 @@
         </aside>
 
         <main class="flex-1 p-4 md:p-8 overflow-y-auto">
-            <!-- Mobile Header -->
             <header class="lg:hidden flex items-center justify-between mb-8">
                  <div class="flex items-center space-x-3">
                     <div class="bg-hijau-500 text-white p-2.5 rounded-lg shadow-sm"><i class="bi bi-shield-check text-xl"></i></div>
                     <div><h1 class="text-lg font-bold text-gray-800">ADMIN PANEL</h1></div>
                 </div>
-                <button id="menu-toggle" class="text-2xl text-gray-700 p-2">
-                    <i class="bi bi-list"></i>
-                </button>
+                <button id="menu-toggle" class="text-2xl text-gray-700 p-2"><i class="bi bi-list"></i></button>
             </header>
 
             <div class="mb-8">
@@ -75,7 +70,24 @@
                                 <th class="p-4 font-semibold text-gray-600 text-sm">Wajib Lampiran</th>
                             </tr>
                         </thead>
-                        <tbody id="cutiTableBody" class="divide-y divide-slate-100"></tbody>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse($jenisCuti as $cuti)
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-4 font-semibold text-gray-800">{{ $cuti->nama }}</td>
+                                    <td class="p-4 text-sm text-gray-600">
+                                        @if($cuti->wajib_lampiran)
+                                            <span class="text-hijau-600 font-bold">Ya</span>
+                                        @else
+                                            Tidak
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="2" class="text-center p-4 text-gray-500">Data jenis cuti tidak ditemukan.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -97,32 +109,6 @@
 
             if (menuToggle) menuToggle.addEventListener('click', toggleMenu);
             if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleMenu);
-
-            // --- Render Table Logic ---
-            const cutiTableBody = document.getElementById('cutiTableBody');
-
-            function renderTable() {
-                // Data jenis cuti sudah diinisialisasi secara terpusat oleh app.js
-                const jenisCuti = JSON.parse(localStorage.getItem('jenisCuti')) || [];
-                cutiTableBody.innerHTML = '';
-
-                if (jenisCuti.length === 0) {
-                    cutiTableBody.innerHTML = `<tr><td colspan="2" class="text-center p-4 text-gray-500">Data jenis cuti tidak ditemukan.</td></tr>`;
-                    return;
-                }
-                
-                jenisCuti.forEach(cuti => {
-                    const row = `
-                        <tr>
-                            <td class="p-4 font-semibold text-gray-800">${cuti.nama}</td>
-                            <td class="p-4 text-sm text-gray-600">${cuti.wajibLampiran ? '<span class="text-hijau-600 font-bold">Ya</span>' : 'Tidak'}</td>
-                        </tr>
-                    `;
-                    cutiTableBody.insertAdjacentHTML('beforeend', row);
-                });
-            }
-
-            renderTable();
         });
     </script>
 </body>

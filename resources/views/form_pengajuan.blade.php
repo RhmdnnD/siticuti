@@ -86,6 +86,11 @@
                                 <label for="jenis_cuti" class="block text-sm font-medium text-gray-700 mb-1">Jenis Cuti</label>
                                 <select id="jenis_cuti" name="jenis_cuti" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-hijau-400" required>
                                     <option value="">Pilih Jenis Cuti</option>
+                                    @foreach($jenisCuti as $cuti)
+                                        <option value="{{ $cuti->nama }}" data-wajib-lampiran="{{ $cuti->wajib_lampiran ? 'true' : 'false' }}">
+                                            {{ $cuti->nama }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div>
@@ -197,17 +202,7 @@
             tglMulaiInput.setAttribute('min', tomorrowString);
             tglSelesaiInput.setAttribute('min', tomorrowString);
 
-            // Ambil opsi jenis cuti dari localStorage (karena Anda belum memindahkannya ke database)
-            const jenisCutiData = JSON.parse(localStorage.getItem('jenisCuti')) || [];
-            jenisCutiData.forEach(cuti => {
-                const option = document.createElement('option');
-                option.value = cuti.nama;
-                option.dataset.wajibLampiran = cuti.wajibLampiran || false;
-                option.textContent = cuti.nama;
-                jenisCutiSelect.appendChild(option);
-            });
 
-            // Logika UI saat ganti jenis cuti
             jenisCutiSelect.addEventListener('change', function() {
                 const selectedOption = this.options[this.selectedIndex];
                 const wajibLampiran = selectedOption.dataset.wajibLampiran === 'true';

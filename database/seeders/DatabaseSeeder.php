@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Membuat Akun Admin
+        /*
         User::create([
             'name' => 'Administrator',
             'username' => 'admin',
@@ -28,6 +29,16 @@ class DatabaseSeeder extends Seeder
             'jabatan' => 'Staf Teknis Lingkungan',
             'pangkat_gol' => 'Penata Muda / III.a',
             'sisa_cuti_tahun_ini' => 12,
+        ]);
+        */
+
+        \App\Models\JenisCuti::insert([
+            ['nama' => 'Cuti Tahunan', 'wajib_lampiran' => false],
+            ['nama' => 'Cuti Sakit', 'wajib_lampiran' => true],
+            ['nama' => 'Cuti Melahirkan', 'wajib_lampiran' => true],
+            ['nama' => 'Cuti Alasan Penting', 'wajib_lampiran' => false],
+            ['nama' => 'Cuti Besar', 'wajib_lampiran' => false],
+            ['nama' => 'Cuti di Luar Tanggungan Negara', 'wajib_lampiran' => true],
         ]);
     }
 }
