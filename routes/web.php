@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CutiController;
 
 // --- ROUTE GUEST (HANYA UNTUK YANG BELUM LOGIN) ---
 Route::middleware('guest')->group(function () {
@@ -23,6 +24,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/pengajuan', function () {
         return view('form_pengajuan');
     });
+
+    Route::post('/pengajuan', [CutiController::class, 'store']);
 
     Route::get('/profil', function () {
         return view('profil_asn');
