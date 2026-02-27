@@ -90,7 +90,7 @@
             </header>
 
             <div class="mb-8">
-                <h1 id="welcomeMessage" class="text-3xl font-bold text-gray-800">Selamat Datang,</h1>
+                <h1 class="text-3xl font-bold text-gray-800">Selamat Datang, {{ explode(' ', $user->name)[0] }}!</h1>
                 <p class="text-gray-500 mt-1">Berikut adalah ringkasan dan aksi cepat untuk manajemen cuti Anda.</p>
             </div>
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -98,7 +98,7 @@
                     <div class="bg-gradient-to-br from-hijau-500 to-hijau-600 text-white p-8 rounded-2xl shadow-lg flex items-center justify-between">
                         <div>
                             <h3 class="font-semibold text-lg opacity-90">Sisa Cuti Tahunan Anda</h3>
-                            <p class="text-6xl font-extrabold mt-2"><span id="sisaCuti">0</span> <span class="text-3xl font-semibold">Hari</span></p>
+                            <p class="text-6xl font-extrabold mt-2"><span id="sisaCuti">{{ $totalSisaCuti }}</span> <span class="text-3xl font-semibold">Hari</span></p>
                             <p class="opacity-80 mt-2">Dari total 12 hari hak cuti tahunan.</p>
                         </div>
                         <i class="bi bi-calendar2-check-fill text-8xl opacity-20 transform -rotate-12"></i>
@@ -106,7 +106,46 @@
                     <div>
                         <h3 class="text-xl font-bold text-gray-800 mb-4">Riwayat Pengajuan Terbaru</h3>
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                            <ul id="riwayatCuti" class="divide-y divide-slate-100"></ul>
+                            <ul id="riwayatCuti" class="divide-y divide-slate-100">
+                                @forelse ($riwayatCuti as $cuti)
+                                    <li class="flex items-center justify-between p-4 hover:bg-slate-50">
+                                        <div class="flex items-center space-x-4">
+                                            @php
+                                                // Menentukan warna badge berdasarkan status
+                                                $statusClass = match($cuti->status) {
+                                                    'Disetujui' => 'bg-hijau-100 text-hijau-800',
+                                                    'Ditolak' => 'bg-red-100 text-red-800',
+                                                    default => 'bg-yellow-100 text-yellow-800',
+                                                };
+                                                $iconClass = match($cuti->status) {
+                                                    'Disetujui' => 'bi-check-circle-fill text-hijau-600',
+                                                    'Ditolak' => 'bi-x-circle-fill text-red-600',
+                                                    default => 'bi-clock-history text-yellow-600',
+                                                };
+                                            @endphp
+                                            <div class="p-3 rounded-full {{ $statusClass }}">
+                                                <i class="bi {{ $iconClass }}"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-gray-800">{{ $cuti->jenis_cuti }}</p>
+                                                <p class="text-sm text-gray-500">
+                                                    {{ \Carbon\Carbon::parse($cuti->tanggal_mulai)->format('d M Y') }} s/d {{ \Carbon\Carbon::parse($cuti->tanggal_selesai)->format('d M Y') }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        @if ($cuti->status === 'Menunggu')
+                                            <button class="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-full hover:bg-red-200 font-semibold">Batalkan</button>
+                                        @elseif ($cuti->status === 'Disetujui')
+                                            <button class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 font-semibold flex items-center gap-1"><i class="bi bi-download"></i> Download</button>
+                                        @else
+                                            <span class="px-3 py-1 text-xs rounded-full {{ $statusClass }} font-bold">{{ $cuti->status }}</span>
+                                        @endif
+                                    </li>
+                                @empty
+                                    <li class="text-center p-4 text-gray-500">Tidak ada riwayat pengajuan dari database.</li>
+                                @endforelse
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -207,38 +246,6 @@
             const downloadFromPreviewBtn = document.getElementById('downloadFromPreview');
             let pdfDocToDownload = null;
             let pdfFileNameToDownload = '';
-
-            function renderRiwayat() {
-                const allCuti = JSON.parse(localStorage.getItem('pengajuanCuti')) || [];
-                const riwayatCutiData = allCuti.filter(cuti => cuti.asnId === loggedInUser.id).sort((a,b) => b.id - a.id).slice(0, 5);
-                riwayatList.innerHTML = '';
-
-                if (riwayatCutiData.length > 0) {
-                    riwayatCutiData.forEach(cuti => {
-                        const statusClass = { 'Disetujui': 'bg-hijau-100 text-hijau-800', 'Ditolak': 'bg-red-100 text-red-800', 'Menunggu': 'bg-yellow-100 text-yellow-800' };
-                        const iconClass = { 'Disetujui': 'bi-check-circle-fill text-hijau-600', 'Ditolak': 'bi-x-circle-fill text-red-600', 'Menunggu': 'bi-clock-history text-yellow-600' };
-                        let actionButton;
-                        if (cuti.status === 'Menunggu') {
-                            actionButton = `<button data-id="${cuti.id}" class="btn-batal text-xs bg-red-100 text-red-700 px-3 py-1 rounded-full hover:bg-red-200 font-semibold">Batalkan</button>`;
-                        } else if (cuti.status === 'Disetujui') {
-                            actionButton = `<button data-id="${cuti.id}" class="btn-download text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 font-semibold flex items-center gap-1"><i class="bi bi-download"></i> Download</button>`;
-                        } else {
-                            actionButton = `<span class="px-3 py-1 text-xs rounded-full ${statusClass[cuti.status]} font-bold">${cuti.status}</span>`;
-                        }
-                        const item = `
-                            <li class="flex items-center justify-between p-4 hover:bg-slate-50">
-                                <div class="flex items-center space-x-4">
-                                    <div class="p-3 rounded-full ${statusClass[cuti.status]}"><i class="bi ${iconClass[cuti.status]}"></i></div>
-                                    <div><p class="font-semibold text-gray-800">${cuti.jenis}</p><p class="text-sm text-gray-500">${cuti.tanggal}</p></div>
-                                </div>
-                                ${actionButton}
-                            </li>`;
-                        riwayatList.innerHTML += item;
-                    });
-                } else {
-                     riwayatList.innerHTML = `<li class="text-center p-4 text-gray-500">Tidak ada riwayat pengajuan.</li>`;
-                }
-            }
 
             riwayatList.addEventListener('click', function(e) {
                 const target = e.target.closest('button');
@@ -701,7 +708,6 @@
                 return { doc, fileName };
             }
 
-            renderRiwayat();
         });
     </script>
 </body>

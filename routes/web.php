@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CutiController;
+use App\Http\Controllers\DashboardController;
 
 // --- ROUTE GUEST (HANYA UNTUK YANG BELUM LOGIN) ---
 Route::middleware('guest')->group(function () {
@@ -17,9 +18,7 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // --- ROUTE ASN (WAJIB LOGIN) ---
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('index');
-    });
+    Route::get('/dashboard', [DashboardController::class, 'index']);
 
     Route::get('/pengajuan', function () {
         return view('form_pengajuan');
