@@ -12,23 +12,26 @@ class AdminController extends Controller
     // 1. Menampilkan Halaman Dashboard Admin
     public function index()
     {
-        // Hitung statistik (Real-time dari database)
         $totalAsn = User::where('role', 'asn')->count();
         $menunggu = Cuti::where('status', 'Menunggu')->count();
-        // Hitung cuti yang disetujui/ditolak pada tahun ini saja
         $disetujui = Cuti::where('status', 'Disetujui')->whereYear('created_at', date('Y'))->count();
         $ditolak = Cuti::where('status', 'Ditolak')->whereYear('created_at', date('Y'))->count();
 
-        // Ambil data pengajuan yang masih "Menunggu" untuk ditampilkan di tabel
         $pengajuanMenunggu = Cuti::with('user')
             ->where('status', 'Menunggu')
-            ->orderBy('created_at', 'asc') // Yang paling lama mengajukan di atas
+            ->orderBy('created_at', 'asc') 
             ->get();
 
-        // Ambil semua data cuti untuk kebutuhan Export Laporan CSV
+        // TAMBAHAN: Ambil data cuti yang sudah disetujui (untuk ditampilkan dan bisa dibatalkan)
+        $pengajuanDisetujui = Cuti::with('user')
+            ->where('status', 'Disetujui')
+            ->orderBy('updated_at', 'desc') // Paling baru disetujui di atas
+            ->take(20) // Batasi 20 terbaru agar tabel tidak terlalu panjang
+            ->get();
+
         $semuaCuti = Cuti::with('user')->orderBy('created_at', 'desc')->get();
 
-        return view('admin', compact('totalAsn', 'menunggu', 'disetujui', 'ditolak', 'pengajuanMenunggu', 'semuaCuti'));
+        return view('admin', compact('totalAsn', 'menunggu', 'disetujui', 'ditolak', 'pengajuanMenunggu', 'pengajuanDisetujui', 'semuaCuti'));
     }
 
     // 2. Fungsi untuk Menyetujui atau Menolak Cuti
@@ -42,9 +45,7 @@ class AdminController extends Controller
         $cuti->status = $request->status;
         $cuti->save();
 
-        // Jika disetujui, maka tambahkan jumlah 'cuti_diambil' pada user tersebut
         if ($request->status === 'Disetujui') {
-            // Hanya potong jatah cuti jika jenisnya adalah "Cuti Tahunan"
             if ($cuti->jenis_cuti === 'Cuti Tahunan') {
                 $user = User::find($cuti->user_id);
                 $user->cuti_diambil += $cuti->durasi;
@@ -52,7 +53,6 @@ class AdminController extends Controller
             }
         }
 
-        // Catat ke Log Aktivitas
         LogAktivitas::create([
             'user_name' => auth()->user()->name,
             'role' => auth()->user()->role,
@@ -60,5 +60,39 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', 'Pengajuan cuti berhasil ' . strtolower($request->status) . '!');
+    }
+
+    // 3. FITUR BARU: Fungsi untuk Membatalkan Cuti yang Sudah Disetujui (Refund Sisa Cuti)
+    public function batalkanPersetujuan($id)
+    {
+        $cuti = Cuti::with('user')->findOrFail($id);
+
+        if ($cuti->status === 'Disetujui') {
+            // Jika jenisnya Cuti Tahunan, KEMBALIKAN jatahnya! (Kurangi cuti_diambil)
+            if ($cuti->jenis_cuti === 'Cuti Tahunan') {
+                $user = User::find($cuti->user_id);
+                $user->cuti_diambil -= $cuti->durasi;
+                
+                // Mencegah nilai minus jika ada anomali data
+                if ($user->cuti_diambil < 0) {
+                    $user->cuti_diambil = 0;
+                }
+                $user->save();
+            }
+
+            // UBAH KE 'Ditolak' AGAR DATABASE MENERIMA DAN STATISTIK DASHBOARD AKURAT
+            $cuti->status = 'Ditolak';
+            $cuti->save();
+
+            LogAktivitas::create([
+                'user_name' => auth()->user()->name,
+                'role' => auth()->user()->role,
+                'aksi' => 'Membatalkan persetujuan ' . $cuti->jenis_cuti . ' dari ' . $cuti->user->name . ' (Sisa Cuti Dikembalikan)'
+            ]);
+
+            return back()->with('success', 'Persetujuan cuti dianulir/dibatalkan. Sisa cuti tahunan pegawai otomatis dikembalikan!');
+        }
+
+        return back()->with('error', 'Cuti tidak dapat dibatalkan karena statusnya bukan Disetujui.');
     }
 }

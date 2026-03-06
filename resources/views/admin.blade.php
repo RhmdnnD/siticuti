@@ -46,7 +46,7 @@
         #modalDetail { z-index: 50; }
         #reportModal { z-index: 10000; }
         #calendarModal { z-index: 10000; }
-        #calendarDetailModal { z-index: 10005; } /* Z-index lebih tinggi agar berada di atas kalender */
+        #calendarDetailModal { z-index: 10005; }
 
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; }
         .calendar-day { 
@@ -55,11 +55,10 @@
             font-size: 0.875rem; overflow-y: auto; word-wrap: break-word; 
         }
         
-        /* Scrollbar kustom untuk kotak kalender dan popup */
         .custom-scrollbar::-webkit-scrollbar, .calendar-day::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track, .calendar-day::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb, .calendar-day::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .calendar-day::-webkit-scrollbar-thumb { background: #86efac; } /* Scrollbar hijau khusus kalender */
+        .calendar-day::-webkit-scrollbar-thumb { background: #86efac; }
 
         .calendar-day.current-month { background-color: #f1f5f9; }
         .calendar-day.other-month { background-color: #e2e8f0; color: #94a3b8; }
@@ -96,7 +95,7 @@
             </nav>
 
             <div class="p-4 mt-auto">
-                <a href="{{ url('/logout') }}" class="link-confirm flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold" data-title="Keluar dari Sistem?" data-text="Anda harus login kembali untuk masuk." data-icon="warning">
+                <a href="{{ url('/logout') }}" class="link-confirm flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold" data-title="Keluar dari Sistem?" data-text="Anda harus login kembali untuk masuk." data-icon="warning" data-btn-confirm="bg-red-500 hover:bg-red-600 text-white">
                     <i class="bi bi-box-arrow-right mr-3"></i> Logout
                 </a>
             </div>
@@ -171,7 +170,6 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2 self-end sm:self-center">
-    
                                     <button type="button" onclick="bukaDetailModal({{ json_encode($p) }})" title="Lihat Detail" class="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"><i class="bi bi-eye-fill"></i></button>
                                     
                                     <form action="{{ url('/admin/cuti/'.$p->id.'/status') }}" method="POST" class="form-confirm inline" data-title="Tolak Pengajuan Cuti?" data-text="Pegawai akan menerima status penolakan ini." data-icon="warning" data-btn-confirm="bg-red-500 hover:bg-red-600 text-white">
@@ -180,12 +178,11 @@
                                         <button type="submit" title="Tolak Pengajuan" class="px-3 py-1.5 rounded-lg bg-merah-100 text-merah-700 hover:bg-red-200 font-semibold flex items-center gap-1.5 transition-colors"><i class="bi bi-x-lg"></i> <span class="hidden sm:inline">Tolak</span></button>
                                     </form>
 
-                                    <form action="{{ url('/admin/cuti/'.$p->id.'/status') }}" method="POST" class="form-confirm inline" data-title="Setujui Pengajuan Cuti?" data-text="Cuti akan disetujui. (Sisa cuti otomatis berkurang khusus untuk Cuti Tahunan)" data-icon="question" data-btn-confirm="bg-hijau-500 hover:bg-hijau-600 text-white">
+                                    <form action="{{ url('/admin/cuti/'.$p->id.'/status') }}" method="POST" class="form-confirm inline" data-title="Setujui Pengajuan Cuti?" data-text="Cuti akan disetujui. Khusus Cuti Tahunan akan memotong saldo." data-icon="question" data-btn-confirm="bg-hijau-500 hover:bg-hijau-600 text-white">
                                         @csrf
                                         <input type="hidden" name="status" value="Disetujui">
                                         <button type="submit" title="Setujui Pengajuan" class="px-3 py-1.5 rounded-lg bg-hijau-100 text-hijau-700 hover:bg-hijau-200 font-semibold flex items-center gap-1.5 transition-colors"><i class="bi bi-check-lg"></i> <span class="hidden sm:inline">Setujui</span></button>
                                     </form>
-                                    
                                 </div>
                             </li>
                         @empty
@@ -197,6 +194,45 @@
                     </ul>
                 </div>
             </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mt-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Riwayat Pengajuan Disetujui</h3>
+                    <span class="text-xs bg-hijau-100 text-hijau-700 px-3 py-1 rounded-full font-bold">20 Terbaru</span>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <ul class="divide-y divide-slate-100">
+                        @forelse ($pengajuanDisetujui as $p)
+                            <li class="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 px-2 hover:bg-slate-50 transition-colors">
+                                <div class="flex items-center gap-4 mb-3 sm:mb-0">
+                                    <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center font-bold text-lg shrink-0">
+                                        {{ substr($p->user->name, 0, 1) }}
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-gray-800">{{ $p->user->name }}</p>
+                                        <p class="text-sm text-gray-500">{{ $p->jenis_cuti }} &bull; {{ $p->durasi }} Hari &bull; <span class="text-hijau-600 font-semibold">Disetujui</span></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 self-end sm:self-center">
+                                    <button type="button" onclick="bukaDetailModal({{ json_encode($p) }})" title="Lihat Detail" class="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"><i class="bi bi-eye-fill"></i></button>
+                                    
+                                    <form action="{{ url('/admin/cuti/'.$p->id.'/batal-setuju') }}" method="POST" class="form-confirm inline" data-title="Batalkan Persetujuan Cuti?" data-text="Jika ini Cuti Tahunan, jatah sisa cuti pegawai akan otomatis dikembalikan (Refund)." data-icon="warning" data-btn-confirm="bg-red-500 hover:bg-red-600 text-white">
+                                        @csrf
+                                        <button type="submit" title="Batalkan Persetujuan" class="px-3 py-1.5 rounded-lg bg-merah-50 text-merah-600 hover:bg-red-100 border border-red-100 font-semibold flex items-center gap-1.5 transition-colors"><i class="bi bi-arrow-counterclockwise"></i> <span class="hidden sm:inline">Batal Setuju</span></button>
+                                    </form>
+                                </div>
+                            </li>
+                        @empty
+                            <li class="text-center p-8 text-gray-500">
+                                <i class="bi bi-inbox text-5xl text-gray-300 mb-3 block"></i>
+                                <span class="font-medium text-lg">Kosong</span><br>Belum ada riwayat cuti yang disetujui.
+                            </li>
+                        @endforelse
+                    </ul>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -307,7 +343,6 @@
     <script src="{{ asset('js/app.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Sidebar Mobile Toggle
             const menuToggle = document.getElementById('menu-toggle');
             const sidebar = document.getElementById('sidebar');
             const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -393,7 +428,12 @@
                 });
 
                 if (filteredCuti.length === 0) {
-                    alert('Tidak ada pengajuan cuti pada periode yang dipilih.');
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Data Kosong',
+                        text: 'Tidak ada pengajuan cuti pada periode yang dipilih.',
+                        confirmButtonColor: '#22c55e'
+                    });
                     return;
                 }
 
@@ -436,7 +476,7 @@
                 closeReportModal();
             });
 
-            // --- FUNGSI KALENDER PINTAR & POPUP DETAIL ---
+            // --- FUNGSI KALENDER PINTAR ---
             const calendarModal = document.getElementById('calendarModal');
             const openCalendarModalBtn = document.getElementById('openCalendarModalBtn');
             const closeCalendarModalBtn = document.getElementById('closeCalendarModal');
@@ -445,7 +485,6 @@
             const prevMonthBtn = document.getElementById('prevMonth');
             const nextMonthBtn = document.getElementById('nextMonth');
 
-            // Setup Modal Detail Tanggal
             const calendarDetailModal = document.getElementById('calendarDetailModal');
             const closeCalendarDetailModalBtn = document.getElementById('closeCalendarDetailModal');
             const btnTutupCalendarDetail = document.getElementById('btnTutupCalendarDetail');
@@ -465,12 +504,8 @@
 
             const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
-            // Fungsi Membuka Popup Detail
             window.showCalendarDetail = function(day, month, year, leaves) {
-                // Set Judul (Contoh: 15 Agustus 2026)
                 calendarDetailTitle.textContent = `${day} ${monthNames[month]} ${year}`;
-                
-                // Kosongkan list sebelumnya
                 calendarDetailList.innerHTML = '';
                 
                 leaves.forEach(leave => {
@@ -478,7 +513,6 @@
                     const jenisCuti = leave.jenis_cuti;
                     const inisial = fullName.charAt(0).toUpperCase();
                     
-                    // Card elegan untuk masing-masing orang
                     const html = `
                         <div class="flex items-center p-3 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors">
                             <div class="w-10 h-10 rounded-full bg-hijau-100 text-hijau-600 flex items-center justify-center font-bold text-lg shrink-0 mr-3 shadow-sm border border-hijau-200">
@@ -507,14 +541,12 @@
                 const today = new Date();
                 const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
 
-                // Loop kotak kosong sebelum tanggal 1
                 for (let i = 0; i < firstDay; i++) {
                     const emptyDiv = document.createElement('div');
                     emptyDiv.className = 'calendar-day other-month';
                     calendarDays.appendChild(emptyDiv);
                 }
 
-                // Loop tanggal 1 sampai akhir bulan
                 for (let i = 1; i <= daysInMonth; i++) {
                     const dayDiv = document.createElement('div');
                     dayDiv.className = 'calendar-day current-month';
@@ -523,10 +555,8 @@
                         dayDiv.classList.add('today');
                     }
 
-                    // Format tanggal YYYY-MM-DD
                     const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
                     
-                    // Filter siapa saja yang cutinya "Disetujui" dan mencakup tanggal ini
                     const leavesOnThisDay = semuaCutiData.filter(cuti => {
                         if (cuti.status !== 'Disetujui') return false;
                         return dateString >= cuti.tanggal_mulai && dateString <= cuti.tanggal_selesai;
@@ -537,13 +567,11 @@
                     if (leavesOnThisDay.length > 0) {
                         dayDiv.classList.add('has-leave');
                         
-                        // Menampilkan Nama Depan Pegawai yang Cuti
                         leavesOnThisDay.forEach(leave => {
                             const firstName = leave.user ? leave.user.name.split(' ')[0] : 'Seseorang';
                             contentHtml += `<div class="leave-names" title="${leave.jenis_cuti}">${firstName}</div>`;
                         });
 
-                        // EVENT LISTENER KLIK (Akan membuka popup Detail)
                         dayDiv.addEventListener('click', function() {
                             showCalendarDetail(i, month, year, leavesOnThisDay);
                         });
@@ -578,6 +606,7 @@
             });
         });
     </script>
+    
     @include('components.notifikasi')
 </body>
 </html>

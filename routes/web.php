@@ -62,6 +62,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/cuti/{id}/status', [AdminController::class, 'updateStatus']);
         Route::get('/laporan/export', [AdminController::class, 'exportLaporan']);
 
+        Route::post('/cuti/{id}/batal-setuju', [AdminController::class, 'batalkanPersetujuan']);
+
         // Manajemen ASN
         Route::get('/asn', [AsnController::class, 'index']);
         Route::post('/asn', [AsnController::class, 'store']);
