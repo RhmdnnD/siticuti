@@ -74,4 +74,10 @@ Route::middleware('auth')->prefix('admin')->group(function () {
 
     Route::get('/log', [LogAktivitasController::class, 'index']);
     Route::get('/log/clear', [LogAktivitasController::class, 'clear']);
+
+    // --- RUTE LOG AKTIVITAS ---
+    Route::get('/admin/log', [\App\Http\Controllers\LogAktivitasController::class, 'index']);
+    Route::post('/admin/log/clear', [\App\Http\Controllers\LogAktivitasController::class, 'clear']);
+    // Tambahkan baris ini untuk auto-clean:
+    Route::post('/admin/log/autoclean', [\App\Http\Controllers\LogAktivitasController::class, 'autoClean']);
 });

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Log Aktivitas - Admin Panel</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,20 +18,13 @@
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        'hijau': { '500': '#22c55e', '600': '#16a34a' },
+                        'hijau': { '50': '#f0fdf4', '100': '#dcfce7', '200': '#bbf7d0', '300': '#86efac', '400': '#4ade80', '500': '#22c55e', '600': '#16a34a', '700': '#15803d' },
                         'slate': { '50': '#f8fafc', '100': '#f1f5f9', '200': '#e2e8f0' }
                     }
                 }
             }
         }
     </script>
-    <style>
-        .custom-radio:checked {
-            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e");
-            border-color: #22c55e;
-            background-color: #22c55e;
-        }
-    </style>
 </head>
 <body class="font-sans bg-slate-50">
     <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
@@ -40,7 +34,7 @@
             <div class="h-20 flex items-center px-6">
                 <div class="flex items-center space-x-3">
                     <div class="bg-hijau-500 text-white p-2.5 rounded-lg shadow-sm"><i class="bi bi-shield-check text-xl"></i></div>
-                    <div><h1 class="text-lg font-bold text-gray-800">ADMIN PANEL</h1><p class="text-xs text-gray-500">SITI</p></div>
+                    <div><h1 class="text-lg font-bold text-gray-800">ADMIN PANEL</h1><p class="text-xs text-gray-500">SITI CUTI</p></div>
                 </div>
             </div>
             
@@ -54,7 +48,7 @@
             </nav>
 
             <div class="p-4 mt-auto">
-                <a href="{{ url('/logout') }}" class="flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold"><i class="bi bi-box-arrow-right mr-3"></i> Logout</a>
+                <a href="{{ url('/logout') }}" class="flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold transition-colors"><i class="bi bi-box-arrow-right mr-3"></i> Logout</a>
             </div>
         </aside>
 
@@ -67,67 +61,102 @@
                 <button id="menu-toggle" class="text-2xl text-gray-700 p-2"><i class="bi bi-list"></i></button>
             </header>
 
-            <div class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-800">Log Aktivitas</h1>
-                <p class="text-gray-500 mt-1">Lihat dan kelola semua log aktivitas yang tercatat di sistem.</p>
+            <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">Log Aktivitas Sistem</h1>
+                    <p class="text-gray-500 mt-1">Pantau seluruh riwayat aktivitas yang terjadi di dalam SITI CUTI.</p>
+                </div>
+                
+                <form action="{{ url('/admin/log/clear') }}" method="POST" class="w-full md:w-auto" onsubmit="return confirm('Peringatan: Tindakan ini akan MENGHAPUS SEMUA riwayat log aktivitas secara permanen. Anda yakin?');">
+                    @csrf
+                    <button type="submit" class="w-full bg-red-50 text-red-600 font-bold py-2.5 px-5 rounded-lg shadow-sm hover:bg-red-100 flex items-center justify-center space-x-2 transition-colors">
+                        <i class="bi bi-trash3-fill"></i><span>Bersihkan Semua Log</span>
+                    </button>
+                </form>
             </div>
 
             @if(session('success'))
-                <div class="mb-4 p-4 bg-hijau-100 text-hijau-700 rounded-lg font-semibold">{{ session('success') }}</div>
+                <div class="mb-6 p-4 bg-hijau-50 border border-hijau-200 text-hijau-700 rounded-lg font-semibold flex items-center">
+                    <i class="bi bi-check-circle-fill mr-2"></i> {{ session('success') }}
+                </div>
             @endif
 
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
-                
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 border-b border-slate-200 pb-6">
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-800">Penghapusan Log Otomatis</h3>
-                        <p class="text-sm text-gray-500 mt-1">Hapus log secara otomatis setelah periode tertentu.</p>
-                    </div>
-                    <div id="autoDeleteOptions" class="flex flex-wrap items-center gap-x-6 gap-y-2">
-                        <label class="flex items-center cursor-pointer">
-                            <input type="radio" name="autoDelete" value="0" class="custom-radio text-hijau-500 focus:ring-hijau-500">
-                            <span class="ml-2 text-sm font-medium text-gray-700">Jangan Hapus</span>
-                        </label>
-                        <label class="flex items-center cursor-pointer">
-                            <input type="radio" name="autoDelete" value="1" class="custom-radio text-hijau-500 focus:ring-hijau-500">
-                            <span class="ml-2 text-sm font-medium text-gray-700">1 Bulan</span>
-                        </label>
-                        <label class="flex items-center cursor-pointer">
-                            <input type="radio" name="autoDelete" value="3" class="custom-radio text-hijau-500 focus:ring-hijau-500">
-                            <span class="ml-2 text-sm font-medium text-gray-700">3 Bulan</span>
-                        </label>
-                        <label class="flex items-center cursor-pointer">
-                            <input type="radio" name="autoDelete" value="6" class="custom-radio text-hijau-500 focus:ring-hijau-500">
-                            <span class="ml-2 text-sm font-medium text-gray-700">6 Bulan</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-                    <h3 class="text-xl font-bold text-gray-800">Daftar Log Aktivitas</h3>
-                    <a href="{{ url('/admin/log/clear') }}" onclick="return confirm('Apakah Anda yakin ingin menghapus SEMUA log aktivitas secara permanen?')" class="w-full sm:w-auto px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-semibold flex items-center justify-center gap-2">
-                        <i class="bi bi-eraser-fill"></i>
-                        <span>Bersihkan Log Sekarang</span>
-                    </a>
-                </div>
-                
-                <ul class="divide-y divide-slate-100 max-h-[60vh] overflow-y-auto border-t border-slate-200">
-                    @forelse($logs as $log)
-                        <li class="p-4 hover:bg-slate-50">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="font-semibold text-gray-800">{{ $log->aksi }}</p>
-                                    <p class="text-sm text-gray-500">Oleh: {{ $log->user_name }} pada {{ \Carbon\Carbon::parse($log->created_at)->translatedFormat('d M Y, H:i') }}</p>
-                                </div>
-                                <span class="text-xs font-bold px-2 py-1 rounded-full {{ strtolower($log->role) == 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-800' }} ml-2 flex-shrink-0">
-                                    {{ strtoupper($log->role) }}
-                                </span>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center"><i class="bi bi-gear-fill text-slate-400 mr-2"></i> Pengaturan Penyimpanan Log</h3>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <p class="text-sm text-gray-600 font-medium w-48">Hapus otomatis log yang lebih tua dari:</p>
+                    <div class="flex flex-wrap gap-3">
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="autoDelete" value="1" class="peer sr-only">
+                            <div class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-gray-600 peer-checked:bg-hijau-50 peer-checked:text-hijau-700 peer-checked:border-hijau-500 hover:bg-slate-100 transition-colors">
+                                1 Bulan
                             </div>
-                        </li>
-                    @empty
-                        <li class="p-4 text-gray-500 text-center">Tidak ada log aktivitas tercatat di database.</li>
-                    @endforelse
-                </ul>
+                        </label>
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="autoDelete" value="3" class="peer sr-only">
+                            <div class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-gray-600 peer-checked:bg-hijau-50 peer-checked:text-hijau-700 peer-checked:border-hijau-500 hover:bg-slate-100 transition-colors">
+                                3 Bulan
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="autoDelete" value="6" class="peer sr-only">
+                            <div class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-gray-600 peer-checked:bg-hijau-50 peer-checked:text-hijau-700 peer-checked:border-hijau-500 hover:bg-slate-100 transition-colors">
+                                6 Bulan
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="autoDelete" value="never" class="peer sr-only">
+                            <div class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-gray-600 peer-checked:bg-hijau-50 peer-checked:text-hijau-700 peer-checked:border-hijau-500 hover:bg-slate-100 transition-colors">
+                                Jangan Hapus
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="p-4 font-semibold text-gray-600 text-sm">Waktu</th>
+                                <th class="p-4 font-semibold text-gray-600 text-sm">Pengguna</th>
+                                <th class="p-4 font-semibold text-gray-600 text-sm">Peran</th>
+                                <th class="p-4 font-semibold text-gray-600 text-sm">Aktivitas</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse($logs as $log)
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="p-4 text-sm text-gray-500">
+                                        {{ \Carbon\Carbon::parse($log->created_at)->format('d M Y') }} <br> 
+                                        <span class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($log->created_at)->format('H:i') }} WIB</span>
+                                    </td>
+                                    <td class="p-4">
+                                        <p class="font-bold text-gray-800">{{ $log->user_name }}</p>
+                                    </td>
+                                    <td class="p-4">
+                                        @if(strtolower($log->role) == 'admin')
+                                            <span class="px-2.5 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-md uppercase tracking-wider">Admin</span>
+                                        @else
+                                            <span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-md uppercase tracking-wider">ASN</span>
+                                        @endif
+                                    </td>
+                                    <td class="p-4 text-sm text-gray-700">
+                                        {{ $log->aksi }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-center py-12">
+                                        <div class="text-gray-300 mb-3"><i class="bi bi-clock-history text-5xl"></i></div>
+                                        <p class="text-gray-500 font-medium">Belum ada aktivitas yang terekam.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </main>
     </div>
@@ -135,7 +164,7 @@
     <script src="{{ asset('js/app.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Mobile Menu Toggle
+            // Sidebar Toggle
             const menuToggle = document.getElementById('menu-toggle');
             const sidebar = document.getElementById('sidebar');
             const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -148,23 +177,65 @@
             if (menuToggle) menuToggle.addEventListener('click', toggleMenu);
             if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleMenu);
 
-            // UI Logika Penghapusan Otomatis (Hanya disimpan di localStorage)
+            // --- LOGIKA PENGHAPUSAN OTOMATIS (BERJALAN DI LATAR BELAKANG) ---
             const autoDeleteOptions = document.querySelectorAll('input[name="autoDelete"]');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-            function loadAutoDeleteSetting() {
-                const savedValue = localStorage.getItem('logAutoDeleteMonths') || '3';
-                const optionToSelect = document.querySelector(`input[name="autoDelete"][value="${savedValue}"]`);
-                if (optionToSelect) optionToSelect.checked = true;
+            // Fungsi untuk mengirim sinyal pembersihan ke Server
+            function jalankanPembersihanOtomatis(months) {
+                if (months === 'never' || !months) return; 
+
+                fetch('{{ url("/admin/log/autoclean") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({ months: months })
+                })
+                .then(response => response.json())
+                .then(data => console.log('Auto-clean status:', data.message))
+                .catch(error => console.error('Error auto-clean:', error));
             }
 
+            // Saat halaman pertama kali dimuat
+            function initAutoDeleteSetting() {
+                const savedValue = localStorage.getItem('logAutoDeleteMonths') || '3'; // Default 3 bulan
+                const optionToSelect = document.querySelector(`input[name="autoDelete"][value="${savedValue}"]`);
+                if (optionToSelect) optionToSelect.checked = true;
+
+                // Langsung perintahkan server untuk sweeping log diam-diam!
+                jalankanPembersihanOtomatis(savedValue);
+            }
+
+            // Saat Admin mengubah pengaturan Radio Button
             autoDeleteOptions.forEach(radio => {
                 radio.addEventListener('change', function(event) {
-                    localStorage.setItem('logAutoDeleteMonths', event.target.value);
-                    alert('Preferensi auto-delete berhasil disimpan di browser!');
+                    const selectedValue = event.target.value;
+                    localStorage.setItem('logAutoDeleteMonths', selectedValue);
+                    
+                    const labelText = event.target.nextElementSibling.textContent.trim();
+                    
+                    // Segera kirim ke server dan refresh tabel agar log lamanya langsung menghilang dari layar
+                    if (selectedValue !== 'never') {
+                        fetch('{{ url("/admin/log/autoclean") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({ months: selectedValue })
+                        }).then(() => {
+                            alert(`Sistem telah otomatis menghapus log yang lebih tua dari ${labelText}.`);
+                            window.location.reload(); // Refresh layar agar bersih
+                        });
+                    } else {
+                        alert('Pengaturan disimpan. Log tidak akan dihapus otomatis.');
+                    }
                 });
             });
             
-            loadAutoDeleteSetting();
+            initAutoDeleteSetting(); // Eksekusi saat masuk
         });
     </script>
 </body>
