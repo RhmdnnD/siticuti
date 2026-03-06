@@ -11,7 +11,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Membuat Akun Admin
-        /*
+
         User::create([
             'name' => 'Administrator',
             'username' => 'admin',
@@ -30,7 +30,6 @@ class DatabaseSeeder extends Seeder
             'pangkat_gol' => 'Penata Muda / III.a',
             'sisa_cuti_tahun_ini' => 12,
         ]);
-        */
 
         \App\Models\JenisCuti::insert([
             ['nama' => 'Cuti Tahunan', 'wajib_lampiran' => false],

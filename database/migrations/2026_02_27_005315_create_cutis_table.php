@@ -13,14 +13,15 @@ return new class extends Migration
     {
         Schema::create('cutis', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // ID ASN yang mengajukan
-            $table->string('jenis_cuti'); // Tahunan, Sakit, dll
-            $table->text('alasan')->nullable();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->string('jenis_cuti');
             $table->date('tanggal_mulai');
             $table->date('tanggal_selesai');
-            $table->integer('durasi'); // Berapa hari
-            $table->text('alamat_cuti')->nullable();
-            $table->string('status')->default('Menunggu'); // Menunggu, Disetujui, Ditolak
+            $table->integer('durasi');
+            $table->text('alasan');
+            $table->text('alamat'); // <-- Penamaan sudah disesuaikan
+            $table->string('lampiran')->nullable(); // <-- KOLOM BARU UNTUK FILE
+            $table->enum('status', ['Menunggu', 'Disetujui', 'Ditolak'])->default('Menunggu');
             $table->timestamps();
         });
     }

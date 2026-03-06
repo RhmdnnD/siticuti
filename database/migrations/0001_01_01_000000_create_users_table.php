@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('jabatan')->nullable();
             $table->string('pangkat_gol')->nullable();
             $table->string('telepon')->nullable();
+
+            $table->date('tmt')->nullable();
             
             $table->integer('masa_kerja_tahun')->default(0);
             $table->integer('masa_kerja_bulan')->default(0);

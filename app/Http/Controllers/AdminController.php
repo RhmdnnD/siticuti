@@ -3,52 +3,62 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Cuti;
 use App\Models\User;
+use App\Models\Cuti;
+use App\Models\LogAktivitas;
 
 class AdminController extends Controller
 {
-    // Menampilkan Dashboard Admin
+    // 1. Menampilkan Halaman Dashboard Admin
     public function index()
     {
-        // Menghitung statistik untuk kartu di atas
-        $totalPengajuan = Cuti::count();
-        $totalMenunggu = Cuti::where('status', 'Menunggu')->count();
-        $totalDisetujui = Cuti::where('status', 'Disetujui')->count();
-        $totalDitolak = Cuti::where('status', 'Ditolak')->count();
+        // Hitung statistik (Real-time dari database)
+        $totalAsn = User::where('role', 'asn')->count();
+        $menunggu = Cuti::where('status', 'Menunggu')->count();
+        // Hitung cuti yang disetujui/ditolak pada tahun ini saja
+        $disetujui = Cuti::where('status', 'Disetujui')->whereYear('created_at', date('Y'))->count();
+        $ditolak = Cuti::where('status', 'Ditolak')->whereYear('created_at', date('Y'))->count();
 
-        // Mengambil daftar pengajuan yang statusnya masih 'Menunggu'
-        // Kita gunakan 'with('user')' untuk mengambil relasi data pegawai yang mengajukannya
+        // Ambil data pengajuan yang masih "Menunggu" untuk ditampilkan di tabel
         $pengajuanMenunggu = Cuti::with('user')
-                                 ->where('status', 'Menunggu')
-                                 ->orderBy('created_at', 'desc')
-                                 ->get();
+            ->where('status', 'Menunggu')
+            ->orderBy('created_at', 'asc') // Yang paling lama mengajukan di atas
+            ->get();
 
-        return view('admin', compact(
-            'totalPengajuan', 'totalMenunggu', 'totalDisetujui', 'totalDitolak', 'pengajuanMenunggu'
-        ));
+        // Ambil semua data cuti untuk kebutuhan Export Laporan CSV
+        $semuaCuti = Cuti::with('user')->orderBy('created_at', 'desc')->get();
+
+        return view('admin', compact('totalAsn', 'menunggu', 'disetujui', 'ditolak', 'pengajuanMenunggu', 'semuaCuti'));
     }
 
-    // Fungsi untuk mengubah status cuti (Setujui / Tolak)
+    // 2. Fungsi untuk Menyetujui atau Menolak Cuti
     public function updateStatus(Request $request, $id)
     {
-        $cuti = Cuti::findOrFail($id);
-        $user = User::findOrFail($cuti->user_id);
+        $request->validate([
+            'status' => 'required|in:Disetujui,Ditolak'
+        ]);
 
-        if ($request->action === 'setujui') {
-            $cuti->status = 'Disetujui';
-            
-            // Kurangi sisa cuti jika jenisnya Cuti Tahunan
+        $cuti = Cuti::with('user')->findOrFail($id);
+        $cuti->status = $request->status;
+        $cuti->save();
+
+        // Jika disetujui, maka tambahkan jumlah 'cuti_diambil' pada user tersebut
+        if ($request->status === 'Disetujui') {
+            // Hanya potong jatah cuti jika jenisnya adalah "Cuti Tahunan"
             if ($cuti->jenis_cuti === 'Cuti Tahunan') {
+                $user = User::find($cuti->user_id);
                 $user->cuti_diambil += $cuti->durasi;
                 $user->save();
             }
-        } elseif ($request->action === 'tolak') {
-            $cuti->status = 'Ditolak';
         }
 
-        $cuti->save();
+        // Catat ke Log Aktivitas
+        LogAktivitas::create([
+            'user_name' => auth()->user()->name,
+            'role' => auth()->user()->role,
+            'aksi' => $request->status . ' pengajuan ' . $cuti->jenis_cuti . ' dari ' . $cuti->user->name
+        ]);
 
-        return back()->with('success', 'Status pengajuan cuti berhasil diperbarui.');
+        return back()->with('success', 'Pengajuan cuti berhasil ' . strtolower($request->status) . '!');
     }
 }

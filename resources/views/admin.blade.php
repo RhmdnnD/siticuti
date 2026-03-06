@@ -37,7 +37,7 @@
         .modal-backdrop.show, .custom-modal-backdrop.show { opacity: 1; visibility: visible; }
         .modal-content, .custom-modal-content {
             background-color: #fff; padding: 2rem; border-radius: 0.75rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             width: 90%; max-width: 500px; transform: translateY(-20px);
             transition: transform 0.3s ease;
         }
@@ -46,32 +46,42 @@
         #modalDetail { z-index: 50; }
         #reportModal { z-index: 10000; }
         #calendarModal { z-index: 10000; }
-        #customAlertModal { z-index: 10001; }
+        #calendarDetailModal { z-index: 10005; } /* Z-index lebih tinggi agar berada di atas kalender */
 
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; }
-        .calendar-day { padding: 0.5rem; border-radius: 0.5rem; min-height: 80px; display: flex; flex-direction: column; align-items: center; text-align: center; font-size: 0.875rem; overflow: hidden; word-wrap: break-word; }
+        .calendar-day { 
+            padding: 0.5rem; border-radius: 0.5rem; min-height: 80px; max-height: 110px; 
+            display: flex; flex-direction: column; align-items: center; text-align: center; 
+            font-size: 0.875rem; overflow-y: auto; word-wrap: break-word; 
+        }
+        
+        /* Scrollbar kustom untuk kotak kalender dan popup */
+        .custom-scrollbar::-webkit-scrollbar, .calendar-day::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track, .calendar-day::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb, .calendar-day::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .calendar-day::-webkit-scrollbar-thumb { background: #86efac; } /* Scrollbar hijau khusus kalender */
+
         .calendar-day.current-month { background-color: #f1f5f9; }
         .calendar-day.other-month { background-color: #e2e8f0; color: #94a3b8; }
-        .calendar-day.has-leave { background-color: #dcfce7; border: 1px solid #4ade80; cursor: pointer; }
+        .calendar-day.has-leave { background-color: #dcfce7; border: 1px solid #4ade80; cursor: pointer; transition: background-color 0.2s; }
+        .calendar-day.has-leave:hover { background-color: #bbf7d0; }
         .calendar-day .day-number { font-weight: 600; margin-bottom: 0.25rem; }
-        .calendar-day .leave-names { font-size: 0.75rem; color: #16a34a; line-height: 1.2; }
+        .calendar-day .leave-names { font-size: 0.75rem; color: #16a34a; line-height: 1.2; margin-bottom: 2px; }
         .calendar-day.today { background-color: #86efac; border: 2px solid #16a34a; color: #15803d; }
-        #calendarModal .custom-modal-content { max-width: 700px; width: 95%; max-height: 90vh; overflow-y: auto; }
+        #calendarModal .custom-modal-content { max-width: 700px; width: 95%; max-height: 90vh; overflow-y: hidden; display: flex; flex-direction: column; }
     </style>
 </head>
 <body class="font-sans bg-slate-50">
-    <!-- Overlay for mobile menu -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
 
     <div class="relative min-h-screen lg:flex">
-        <!-- Sidebar -->
         <aside id="sidebar" class="bg-white w-64 flex-col fixed inset-y-0 left-0 transform -translate-x-full transition-transform duration-300 ease-in-out z-50 lg:relative lg:translate-x-0 lg:flex border-r border-slate-200">
             <div class="h-20 flex items-center px-6">
                 <div class="flex items-center space-x-3">
                     <div class="bg-hijau-500 text-white p-2.5 rounded-lg shadow-sm"><i class="bi bi-shield-check text-xl"></i></div>
                     <div>
                         <h1 class="text-lg font-bold text-gray-800">ADMIN PANEL</h1>
-                        <p class="text-xs text-gray-500">SITI</p>
+                        <p class="text-xs text-gray-500">SITI CUTI</p>
                     </div>
                 </div>
             </div>
@@ -86,103 +96,105 @@
             </nav>
 
             <div class="p-4 mt-auto">
-                <a href="{{ url('/logout') }}" id="logoutButton" class="flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold"><i class="bi bi-box-arrow-right mr-3"></i> Logout</a>
+                <a href="{{ url('/logout') }}" class="flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold"><i class="bi bi-box-arrow-right mr-3"></i> Logout</a>
             </div>
         </aside>
 
         <main class="flex-1 p-4 md:p-8 overflow-y-auto">
-            <!-- Mobile Header -->
             <header class="lg:hidden flex items-center justify-between mb-8">
                  <div class="flex items-center space-x-3">
                     <div class="bg-hijau-500 text-white p-2.5 rounded-lg shadow-sm"><i class="bi bi-shield-check text-xl"></i></div>
                     <div><h1 class="text-lg font-bold text-gray-800">ADMIN PANEL</h1></div>
                 </div>
-                <button id="menu-toggle" class="text-2xl text-gray-700 p-2">
-                    <i class="bi bi-list"></i>
-                </button>
+                <button id="menu-toggle" class="text-2xl text-gray-700 p-2"><i class="bi bi-list"></i></button>
             </header>
 
-             <div id="reset-notif" class="hidden bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6 rounded-lg">
-                <p class="font-bold">Reset Cuti Tahunan Berhasil</p>
-                <p>Sisa cuti untuk semua ASN telah diperbarui untuk tahun ini.</p>
-            </div>
+            @if(session('success'))
+                <div class="bg-hijau-100 border-l-4 border-hijau-500 text-hijau-700 p-4 mb-6 rounded-lg font-semibold flex items-center">
+                    <i class="bi bi-check-circle-fill mr-2 text-xl"></i> {{ session('success') }}
+                </div>
+            @endif
+
             <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-800">Selamat Datang, Admin!</h1>
                     <p class="text-gray-500 mt-1">Berikut adalah ringkasan pengajuan cuti terbaru.</p>
                 </div>
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-4 md:mt-0">
-                    <button id="openReportModalBtn" class="bg-white border border-slate-200 text-gray-600 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-center">
-                        <i class="bi bi-download mr-2"></i>
-                        <span>Download Laporan</span>
+                    <button id="openReportModalBtn" class="bg-white border border-slate-200 text-gray-600 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-center shadow-sm transition-colors">
+                        <i class="bi bi-download mr-2"></i><span>Download Laporan</span>
                     </button>
-                    <button id="openCalendarModalBtn" class="bg-hijau-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-hijau-600 flex items-center justify-center space-x-2"><i class="bi bi-calendar-check-fill"></i><span>Lihat Kalender Cuti</span></button>
+                    <button id="openCalendarModalBtn" class="bg-hijau-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-hijau-600 flex items-center justify-center space-x-2 transition-colors"><i class="bi bi-calendar-check-fill"></i><span>Lihat Kalender Cuti</span></button>
                 </div>
             </div>
 
-            <!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-500">Menunggu</h3>
                         <div class="bg-kuning-100 text-kuning-700 p-2.5 rounded-lg"><i class="bi bi-clock-history text-xl"></i></div>
                     </div>
-                    <p id="totalMenunggu" class="text-4xl font-bold text-gray-800 mt-4">{{ $totalMenunggu }}</p>
+                    <p class="text-4xl font-bold text-gray-800 mt-4">{{ $menunggu }}</p>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-500">Disetujui</h3>
                         <div class="bg-hijau-100 text-hijau-600 p-2.5 rounded-lg"><i class="bi bi-check-circle-fill text-xl"></i></div>
                     </div>
-                    <p id="totalDisetujui" class="text-4xl font-bold text-gray-800 mt-4">{{ $totalDisetujui }}</p>
+                    <p class="text-4xl font-bold text-gray-800 mt-4">{{ $disetujui }}</p>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-500">Ditolak</h3>
                         <div class="bg-merah-100 text-merah-700 p-2.5 rounded-lg"><i class="bi bi-x-circle-fill text-xl"></i></div>
                     </div>
-                    <p id="totalDitolak" class="text-4xl font-bold text-gray-800 mt-4">{{ $totalDitolak }}</p>
+                    <p class="text-4xl font-bold text-gray-800 mt-4">{{ $ditolak }}</p>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-500">Total Pengajuan</h3>
                         <div class="bg-blue-100 text-blue-600 p-2.5 rounded-lg"><i class="bi bi-journal-text text-xl"></i></div>
                     </div>
-                    <p id="totalPengajuan" class="text-4xl font-bold text-gray-800 mt-4">{{ $totalPengajuan }}</p>
+                    <p class="text-4xl font-bold text-gray-800 mt-4">{{ count($semuaCuti) }}</p>
                 </div>
             </div>
 
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <h3 class="text-xl font-bold text-gray-800 mb-4">Daftar Pengajuan Cuti Menunggu Persetujuan</h3>
                 <div class="overflow-x-auto">
-                    <ul id="daftarPengajuan" class="divide-y divide-slate-200">
+                    <ul class="divide-y divide-slate-200">
                         @forelse ($pengajuanMenunggu as $p)
-                            <li class="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 px-2">
+                            <li class="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 px-2 hover:bg-slate-50 transition-colors">
                                 <div class="flex items-center gap-4 mb-3 sm:mb-0">
-                                    <img src="https://placehold.co/40x40/22c55e/FFFFFF?text={{ substr($p->user->name, 0, 1) }}" alt="User" class="w-10 h-10 rounded-full">
+                                    <div class="w-10 h-10 rounded-full bg-hijau-100 text-hijau-600 flex items-center justify-center font-bold text-lg shrink-0">
+                                        {{ substr($p->user->name, 0, 1) }}
+                                    </div>
                                     <div>
                                         <p class="font-semibold text-gray-800">{{ $p->user->name }}</p>
                                         <p class="text-sm text-gray-500">{{ $p->jenis_cuti }} &bull; {{ $p->durasi }} Hari</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2 self-end sm:self-center">
-                                    <button title="Lihat Detail" class="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200"><i class="bi bi-eye-fill"></i></button>
+                                    <button type="button" onclick="bukaDetailModal({{ json_encode($p) }})" title="Lihat Detail" class="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"><i class="bi bi-eye-fill"></i></button>
                                     
                                     <form action="{{ url('/admin/cuti/'.$p->id.'/status') }}" method="POST" class="inline">
                                         @csrf
-                                        <input type="hidden" name="action" value="tolak">
-                                        <button type="submit" onclick="return confirm('Yakin ingin menolak cuti ini?')" title="Tolak Pengajuan" class="px-3 py-1.5 rounded-lg bg-merah-100 text-merah-700 hover:bg-red-200 font-semibold flex items-center gap-1.5"><i class="bi bi-x-lg"></i> <span class="hidden sm:inline">Tolak</span></button>
+                                        <input type="hidden" name="status" value="Ditolak">
+                                        <button type="submit" onclick="return confirm('Yakin ingin menolak cuti ini?')" title="Tolak Pengajuan" class="px-3 py-1.5 rounded-lg bg-merah-100 text-merah-700 hover:bg-red-200 font-semibold flex items-center gap-1.5 transition-colors"><i class="bi bi-x-lg"></i> <span class="hidden sm:inline">Tolak</span></button>
                                     </form>
 
                                     <form action="{{ url('/admin/cuti/'.$p->id.'/status') }}" method="POST" class="inline">
                                         @csrf
-                                        <input type="hidden" name="action" value="setujui">
-                                        <button type="submit" onclick="return confirm('Yakin ingin menyetujui cuti ini?')" title="Setujui Pengajuan" class="px-3 py-1.5 rounded-lg bg-hijau-100 text-hijau-700 hover:bg-hijau-200 font-semibold flex items-center gap-1.5"><i class="bi bi-check-lg"></i> <span class="hidden sm:inline">Setujui</span></button>
+                                        <input type="hidden" name="status" value="Disetujui">
+                                        <button type="submit" onclick="return confirm('Yakin ingin menyetujui cuti ini?')" title="Setujui Pengajuan" class="px-3 py-1.5 rounded-lg bg-hijau-100 text-hijau-700 hover:bg-hijau-200 font-semibold flex items-center gap-1.5 transition-colors"><i class="bi bi-check-lg"></i> <span class="hidden sm:inline">Setujui</span></button>
                                     </form>
                                 </div>
                             </li>
                         @empty
-                            <li class="text-center p-4 text-gray-500">Tidak ada pengajuan cuti yang menunggu persetujuan.</li>
+                            <li class="text-center p-8 text-gray-500">
+                                <i class="bi bi-check2-circle text-5xl text-gray-300 mb-3 block"></i>
+                                <span class="font-medium text-lg">Bagus!</span><br>Tidak ada antrean pengajuan cuti saat ini.
+                            </li>
                         @endforelse
                     </ul>
                 </div>
@@ -190,7 +202,6 @@
         </main>
     </div>
 
-    <!-- Modal Detail Cuti -->
     <div id="modalDetail" class="hidden modal-backdrop">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 md:p-8 modal-content">
             <div class="flex items-center justify-between mb-6"><h3 class="text-2xl font-bold text-gray-800">Detail Pengajuan Cuti</h3><button id="closeModalDetail" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button></div>
@@ -202,53 +213,103 @@
                 <div><p class="text-sm text-gray-500">Tanggal & Durasi</p><p id="detailTanggal" class="font-semibold text-gray-800"></p></div>
                 <div><p class="text-sm text-gray-500">Alasan</p><p id="detailAlasan" class="text-gray-800 bg-slate-50 p-3 rounded-md"></p></div>
                 <div><p class="text-sm text-gray-500">Alamat Selama Cuti</p><p id="detailAlamat" class="text-gray-800 bg-slate-50 p-3 rounded-md"></p></div>
-                <div id="detailLampiranContainer" class="hidden"><p class="text-sm text-gray-500">Lampiran</p><a id="detailLampiranLink" href="#" target="_blank" download="lampiran.txt" class="text-hijau-600 hover:underline font-semibold">Lihat Dokumen</a></div>
+                
+                <div id="detailLampiranContainer" class="hidden"><p class="text-sm text-gray-500">Lampiran</p><a id="detailLampiranLink" href="#" target="_blank" class="text-hijau-600 hover:underline font-semibold flex items-center gap-1 mt-1"><i class="bi bi-file-earmark-text"></i> Lihat Dokumen</a></div>
             </div>
-            <div class="flex justify-end mt-8"><button id="tutupModalDetail" class="px-6 py-2 bg-slate-200 text-gray-800 rounded-lg hover:bg-slate-300 font-semibold">Tutup</button></div>
+            <div class="flex justify-end mt-8"><button id="tutupModalDetail" class="px-6 py-2 bg-slate-200 text-gray-800 rounded-lg hover:bg-slate-300 font-semibold transition-colors">Tutup</button></div>
         </div>
     </div>
 
-    <!-- Modal Laporan -->
     <div id="reportModal" class="hidden custom-modal-backdrop">
         <div class="custom-modal-content">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-2xl font-bold text-gray-800">Download Laporan Cuti</h3>
+                <h3 class="text-2xl font-bold text-gray-800 flex items-center"><i class="bi bi-file-earmark-arrow-down-fill text-hijau-500 mr-2"></i> Ekspor Laporan</h3>
                 <button id="closeReportModal" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
             </div>
-            <div class="space-y-4">
-                <div>
-                    <label for="reportMonth" class="block text-sm font-medium text-gray-700 mb-1">Pilih Bulan dan Tahun</label>
-                    <input type="month" id="reportMonth" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-hijau-400">
+            
+            <form id="formReport" action="{{ url('/admin/laporan/export') }}" method="GET" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bulan</label>
+                        <select id="reportMonth" name="bulan" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-hijau-400" required>
+                            <option value="all">Semua Bulan</option>
+                            <option value="01">Januari</option>
+                            <option value="02">Februari</option>
+                            <option value="03">Maret</option>
+                            <option value="04">April</option>
+                            <option value="05">Mei</option>
+                            <option value="06">Juni</option>
+                            <option value="07">Juli</option>
+                            <option value="08">Agustus</option>
+                            <option value="09">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tahun</label>
+                        <select id="reportYear" name="tahun" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-hijau-400" required>
+                            <option value="all">Semua Tahun</option>
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
-            <div class="flex justify-end mt-8 gap-3">
-                <button id="cancelReport" type="button" class="px-6 py-2 bg-slate-200 text-gray-800 rounded-lg hover:bg-slate-300 font-semibold">Batal</button>
-                <button id="downloadReportBtn" class="px-6 py-2 bg-hijau-500 text-white rounded-lg hover:bg-hijau-600 font-semibold flex items-center gap-2">
-                    <i class="bi bi-file-earmark-arrow-down-fill"></i> Download
-                </button>
-            </div>
+                <div class="flex justify-end mt-8 gap-3">
+                    <button type="button" id="cancelReport" class="px-6 py-2 bg-slate-100 text-gray-700 rounded-lg hover:bg-slate-200 font-semibold transition-colors">Batal</button>
+                    <button type="submit" class="px-6 py-2 bg-hijau-500 text-white rounded-lg hover:bg-hijau-600 font-semibold flex items-center gap-2 transition-colors shadow-sm">
+                        <i class="bi bi-download"></i> Download CSV
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- Custom Alert/Confirm Modal -->
-    <div id="customAlertModal" class="custom-modal-backdrop">
-        <div class="custom-modal-content"><h4 id="customAlertTitle" class="text-lg font-bold text-gray-800 mb-4"></h4><p id="customAlertMessage" class="text-gray-700 mb-6"></p><div class="flex justify-end space-x-3"><button id="customAlertCancel" class="px-4 py-2 bg-slate-200 text-gray-700 rounded-lg hover:bg-slate-300 hidden"></button><button id="customAlertOK" class="px-4 py-2 bg-hijau-500 text-white rounded-lg hover:bg-hijau-600"></button></div></div>
+    <div id="calendarModal" class="custom-modal-backdrop hidden">
+        <div class="custom-modal-content flex-1">
+            <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                <h3 class="text-2xl font-bold text-gray-800 flex items-center"><i class="bi bi-calendar3 text-hijau-500 mr-2"></i> Kalender Cuti</h3>
+                <button id="closeCalendarModal" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
+            </div>
+            
+            <div class="flex items-center justify-between mb-4">
+                <button id="prevMonth" class="px-3 py-1.5 bg-slate-100 text-gray-700 rounded-lg hover:bg-slate-200 font-semibold transition-colors"><i class="bi bi-chevron-left"></i> Sebelumnya</button>
+                <h4 id="currentMonthYear" class="text-lg font-bold text-gray-800 uppercase tracking-wide"></h4>
+                <button id="nextMonth" class="px-3 py-1.5 bg-slate-100 text-gray-700 rounded-lg hover:bg-slate-200 font-semibold transition-colors">Berikutnya <i class="bi bi-chevron-right"></i></button>
+            </div>
+            
+            <div class="calendar-grid text-gray-500 text-sm font-bold text-center mb-2">
+                <div>MIN</div><div>SEN</div><div>SEL</div><div>RAB</div><div>KAM</div><div>JUM</div><div>SAB</div>
+            </div>
+            <div id="calendarDays" class="calendar-grid overflow-y-auto custom-scrollbar flex-1 pb-4"></div>
+        </div>
     </div>
 
-    <!-- Calendar Modal -->
-    <div id="calendarModal" class="custom-modal-backdrop">
-        <div class="custom-modal-content">
-            <div class="flex items-center justify-between mb-6"><h3 class="text-2xl font-bold text-gray-800">Kalender Cuti ASN</h3><button id="closeCalendarModal" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button></div>
-            <div class="flex items-center justify-between mb-4"><button id="prevMonth" class="px-3 py-1.5 bg-slate-100 text-gray-700 rounded-lg hover:bg-slate-200 font-semibold"><i class="bi bi-chevron-left"></i> Sebelumnya</button><h4 id="currentMonthYear" class="text-lg font-bold text-gray-800"></h4><button id="nextMonth" class="px-3 py-1.5 bg-slate-100 text-gray-700 rounded-lg hover:bg-slate-200 font-semibold">Berikutnya <i class="bi bi-chevron-right"></i></button></div>
-            <div class="calendar-grid text-gray-700 font-semibold text-center"><div>Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div></div>
-            <div id="calendarDays" class="calendar-grid"></div>
+    <div id="calendarDetailModal" class="custom-modal-backdrop hidden">
+        <div class="custom-modal-content" style="max-width: 450px;">
+            <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                    <i class="bi bi-calendar2-day-fill text-hijau-500 mr-2"></i> 
+                    <span id="calendarDetailTitle">Detail Cuti</span>
+                </h3>
+                <button id="closeCalendarDetailModal" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
+            </div>
+            
+            <div id="calendarDetailList" class="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                </div>
+            
+            <div class="mt-6 flex justify-end pt-4 border-t border-slate-100">
+                <button id="btnTutupCalendarDetail" class="px-5 py-2 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 transition-colors">Tutup</button>
+            </div>
         </div>
     </div>
     
     <script src="{{ asset('js/app.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Mobile Menu Toggle
+            // Sidebar Mobile Toggle
             const menuToggle = document.getElementById('menu-toggle');
             const sidebar = document.getElementById('sidebar');
             const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -260,54 +321,34 @@
 
             if (menuToggle) menuToggle.addEventListener('click', toggleMenu);
             if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleMenu);
-
-            // --- Existing Logic ---
-            const laravelUser = @json(auth()->user());
-            if (laravelUser) {
-                localStorage.setItem('loggedInUser', JSON.stringify({
-                    id: laravelUser.id,
-                    nama: laravelUser.name,
-                    username: laravelUser.username,
-                    role: laravelUser.role
-                }));
-            }
-            const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-
-            document.getElementById('logoutButton').addEventListener('click', function() {
-                addActivityLog(`Logout sebagai Admin`);
-                localStorage.removeItem('loggedInUser');
-                window.location.href = '{{ url('/') }}';
-            });
             
-            let pengajuanCuti = JSON.parse(localStorage.getItem('pengajuanCuti')) || [];
-            let dataAsn = JSON.parse(localStorage.getItem('dataAsn')) || [];
-            
+            // --- DATA DARI DATABASE ---
+            const semuaCutiData = @json($semuaCuti ?? []);
+
+            // --- MODAL DETAIL CUTI ---
             const modalDetail = document.getElementById('modalDetail');
             const closeModalDetail = document.getElementById('closeModalDetail');
             const tutupModalDetail = document.getElementById('tutupModalDetail');
-            const detailLampiranContainer = document.getElementById('detailLampiranContainer');
-            const detailLampiranLink = document.getElementById('detailLampiranLink');
 
-            function openDetailModal(cuti) {
-                document.getElementById('detailNama').textContent = cuti.nama;
-                document.getElementById('detailNip').textContent = cuti.nip || 'N/A';
-                document.getElementById('detailJabatan').textContent = cuti.jabatan || 'N/A';
-                document.getElementById('detailJenis').textContent = cuti.jenis;
-                document.getElementById('detailTanggal').textContent = `${cuti.tanggal} (${cuti.durasi} hari)`;
-                document.getElementById('detailAlasan').textContent = cuti.alasan || 'Tidak ada alasan diberikan.';
-                document.getElementById('detailAlamat').textContent = cuti.alamatCuti || 'Tidak ada alamat diberikan.';
+            window.bukaDetailModal = function(cuti) {
+                document.getElementById('detailNama').textContent = cuti.user.name;
+                document.getElementById('detailNip').textContent = cuti.user.nip || '-';
+                document.getElementById('detailJabatan').textContent = cuti.user.jabatan || '-';
+                document.getElementById('detailJenis').textContent = cuti.jenis_cuti;
+                document.getElementById('detailTanggal').textContent = `${cuti.tanggal_mulai} s/d ${cuti.tanggal_selesai} (${cuti.durasi} Hari)`;
+                document.getElementById('detailAlasan').textContent = cuti.alasan || '-';
+                document.getElementById('detailAlamat').textContent = cuti.alamat || '-';
                 
-                if (cuti.lampiran && cuti.lampiran.data) {
-                    detailLampiranLink.href = cuti.lampiran.data;
-                    detailLampiranLink.download = cuti.lampiran.nama || 'lampiran';
-                    detailLampiranContainer.classList.remove('hidden');
+                if (cuti.lampiran) {
+                    document.getElementById('detailLampiranContainer').classList.remove('hidden');
+                    document.getElementById('detailLampiranLink').href = '{{ asset("storage") }}/' + cuti.lampiran;
                 } else {
-                    detailLampiranContainer.classList.add('hidden');
+                    document.getElementById('detailLampiranContainer').classList.add('hidden');
                 }
 
                 modalDetail.classList.add('show');
                 modalDetail.classList.remove('hidden');
-            }
+            };
 
             function closeDetailModal() {
                 modalDetail.classList.remove('show');
@@ -317,145 +358,12 @@
             closeModalDetail.addEventListener('click', closeDetailModal);
             tutupModalDetail.addEventListener('click', closeDetailModal);
 
-            daftarPengajuan.addEventListener('click', function(e) {
-                const target = e.target.closest('button');
-                if (!target) return;
-
-                const cutiId = parseInt(target.dataset.id);
-                const cutiIndex = pengajuanCuti.findIndex(c => c.id === cutiId);
-                if (cutiIndex === -1) return;
-                
-                const cutiData = pengajuanCuti[cutiIndex];
-                const asnIndex = dataAsn.findIndex(a => a.id === cutiData.asnId);
-
-                if (target.classList.contains('btn-detail')) {
-                    openDetailModal(cutiData);
-                }
-
-                if (target.classList.contains('btn-setujui')) {
-                    showConfirm('Anda yakin ingin menyetujui pengajuan ini?', (result) => {
-                        if (result) {
-                            pengajuanCuti[cutiIndex].status = 'Disetujui';
-                            if (cutiData.jenis === 'Cuti Tahunan' && asnIndex !== -1) {
-                                dataAsn[asnIndex].sisaCuti.diambil += cutiData.durasi;
-                                localStorage.setItem('dataAsn', JSON.stringify(dataAsn));
-                            }
-                            localStorage.setItem('pengajuanCuti', JSON.stringify(pengajuanCuti));
-                            updateStatsAndRender();
-                            showAlert('Pengajuan berhasil disetujui!');
-                            addActivityLog(`Menyetujui pengajuan cuti ${cutiData.jenis} untuk ${cutiData.nama}`);
-                        }
-                    });
-                }
-
-                if (target.classList.contains('btn-tolak')) {
-                     showConfirm('Anda yakin ingin menolak pengajuan ini?', (result) => {
-                        if (result) {
-                            pengajuanCuti[cutiIndex].status = 'Ditolak';
-                            localStorage.setItem('pengajuanCuti', JSON.stringify(pengajuanCuti));
-                            updateStatsAndRender();
-                            showAlert('Pengajuan berhasil ditolak!');
-                            addActivityLog(`Menolak pengajuan cuti ${cutiData.jenis} untuk ${cutiData.nama}`);
-                        }
-                    });
-                }
-            });
-
-            // --- Calendar Logic ---
-            const calendarModal = document.getElementById('calendarModal');
-            const openCalendarModalBtn = document.getElementById('openCalendarModalBtn');
-            const closeCalendarModalBtn = document.getElementById('closeCalendarModal');
-            const calendarDaysEl = document.getElementById('calendarDays');
-            const currentMonthYearEl = document.getElementById('currentMonthYear');
-            const prevMonthBtn = document.getElementById('prevMonth');
-            const nextMonthBtn = document.getElementById('nextMonth');
-            let currentDate = new Date();
-
-            function renderCalendar(date) {
-                calendarDaysEl.innerHTML = '';
-                currentMonthYearEl.textContent = date.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
-                const year = date.getFullYear();
-                const month = date.getMonth();
-                const firstDayOfMonth = new Date(year, month, 1).getDay();
-                const daysInMonth = new Date(year, month + 1, 0).getDate();
-                const daysInPrevMonth = new Date(year, month, 0).getDate();
-                const totalCells = Math.ceil((firstDayOfMonth + daysInMonth) / 7) * 7;
-
-                for (let i = 0; i < totalCells; i++) {
-                    const dayEl = document.createElement('div');
-                    dayEl.className = 'calendar-day';
-                    const dayNumberEl = document.createElement('span');
-                    dayNumberEl.className = 'day-number';
-                    dayEl.appendChild(dayNumberEl);
-                    const leaveNamesEl = document.createElement('div');
-                    leaveNamesEl.className = 'leave-names';
-                    dayEl.appendChild(leaveNamesEl);
-
-                    let displayDate;
-                    if (i < firstDayOfMonth) {
-                        displayDate = new Date(year, month - 1, daysInPrevMonth - firstDayOfMonth + i + 1);
-                        dayEl.classList.add('other-month');
-                    } else if (i >= firstDayOfMonth + daysInMonth) {
-                        displayDate = new Date(year, month + 1, i - firstDayOfMonth - daysInMonth + 1);
-                        dayEl.classList.add('other-month');
-                    } else {
-                        displayDate = new Date(year, month, i - firstDayOfMonth + 1);
-                        dayEl.classList.add('current-month');
-                    }
-                    dayNumberEl.textContent = displayDate.getDate();
-
-                    const today = new Date();
-                    if (displayDate.toDateString() === today.toDateString()) {
-                        dayEl.classList.add('today');
-                    }
-
-                    const leavesOnThisDay = getLeavesForDate(displayDate);
-                    if (leavesOnThisDay.length > 0) {
-                        dayEl.classList.add('has-leave');
-                        const names = leavesOnThisDay.map(l => l.nama.split(' ')[0]);
-                        leaveNamesEl.textContent = names.length > 2 ? `${names.slice(0,2).join(', ')}...` : names.join(', ');
-                        dayEl.addEventListener('click', () => showDayLeaveDetails(displayDate, leavesOnThisDay));
-                    }
-                    calendarDaysEl.appendChild(dayEl);
-                }
-            }
-
-            function getLeavesForDate(date) {
-                const currentLeaves = JSON.parse(localStorage.getItem('pengajuanCuti')) || [];
-                const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                return currentLeaves.filter(leave => {
-                    if (leave.status !== 'Disetujui') return false;
-                    const [startStr, endStr] = leave.tanggal.split(' - ');
-                    const leaveStart = new Date(new Date(startStr).setHours(0,0,0,0));
-                    const leaveEnd = new Date(new Date(endStr).setHours(0,0,0,0));
-                    return checkDate >= leaveStart && checkDate <= leaveEnd;
-                });
-            }
-
-            function showDayLeaveDetails(date, leaves) {
-                let detailsHtml = `<p class="text-gray-700 mb-4">ASN yang Cuti pada ${date.toLocaleDateString('id-ID')}:</p><ul class="list-disc list-inside text-gray-800">${leaves.map(l => `<li>${l.nama} (${l.jenis})</li>`).join('')}</ul>`;
-                showAlert(detailsHtml, null, 'Detail Cuti Harian');
-            }
-
-            openCalendarModalBtn.addEventListener('click', () => {
-                calendarModal.classList.add('show');
-                renderCalendar(currentDate);
-            });
-            closeCalendarModalBtn.addEventListener('click', () => calendarModal.classList.remove('show'));
-            prevMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(currentDate); });
-            nextMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(currentDate); });
-            calendarModal.addEventListener('click', (e) => { if (e.target === calendarModal) calendarModal.classList.remove('show'); });
-
-            // --- Report Logic ---
+            // --- MODAL LAPORAN ---
             const reportModal = document.getElementById('reportModal');
             const openReportModalBtn = document.getElementById('openReportModalBtn');
             const closeReportModalBtn = document.getElementById('closeReportModal');
             const cancelReportBtn = document.getElementById('cancelReport');
-            const downloadReportBtn = document.getElementById('downloadReportBtn');
-            const reportMonthInput = document.getElementById('reportMonth');
-
-            const now = new Date();
-            reportMonthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const formReport = document.getElementById('formReport');
 
             function openReportModal() {
                 reportModal.classList.remove('hidden');
@@ -465,60 +373,54 @@
                 reportModal.classList.remove('show');
                 setTimeout(() => reportModal.classList.add('hidden'), 300);
             }
-            
-            function sanitizeCsvField(field, isNip = false) {
-                if (field === null || field === undefined) {
-                    return '""';
-                }
-                let sanitized = field.toString();
-                if (isNip) {
-                    sanitized = "\t" + sanitized;
-                }
-                sanitized = sanitized.replace(/(\r\n|\n|\r)/gm, " ");
-                sanitized = sanitized.replace(/"/g, '""');
-                return `"${sanitized}"`;
-            }
 
             openReportModalBtn.addEventListener('click', openReportModal);
             closeReportModalBtn.addEventListener('click', closeReportModal);
             cancelReportBtn.addEventListener('click', closeReportModal);
 
-            downloadReportBtn.addEventListener('click', () => {
-                const selectedMonth = reportMonthInput.value;
-                if (!selectedMonth) {
-                    showAlert('Silakan pilih bulan dan tahun terlebih dahulu.');
-                    return;
-                }
+            formReport.addEventListener('submit', function(e) {
+                e.preventDefault(); 
                 
-                const [year, month] = selectedMonth.split('-');
-                const allCuti = JSON.parse(localStorage.getItem('pengajuanCuti')) || [];
-                
-                const filteredCuti = allCuti.filter(cuti => {
-                    if (cuti.status !== 'Disetujui') return false;
-                    const [startDateStr] = cuti.tanggal.split(' - ');
-                    const startDate = new Date(startDateStr);
-                    return startDate.getFullYear() == year && (startDate.getMonth() + 1) == month;
+                const month = document.getElementById('reportMonth').value;
+                const year = document.getElementById('reportYear').value;
+
+                const filteredCuti = semuaCutiData.filter(cuti => {
+                    const cutiDate = new Date(cuti.created_at);
+                    const cMonth = String(cutiDate.getMonth() + 1).padStart(2, '0');
+                    const cYear = String(cutiDate.getFullYear());
+                    
+                    const matchMonth = month === 'all' || cMonth === month;
+                    const matchYear = year === 'all' || cYear === year;
+                    return matchMonth && matchYear;
                 });
 
                 if (filteredCuti.length === 0) {
-                    showAlert('Tidak ada data cuti yang disetujui pada bulan yang dipilih.');
+                    alert('Tidak ada pengajuan cuti pada periode yang dipilih.');
                     return;
                 }
 
-                let csvContent = "\uFEFF"; 
-                const headers = ["Nama", "NIP", "Jabatan", "Jenis Cuti", "Tanggal Mulai", "Tanggal Selesai", "Durasi (Hari)", "Alasan"];
-                csvContent += headers.join(";") + "\r\n";
+                const sanitizeCsvField = (field) => {
+                    if (field === null || field === undefined) return '""';
+                    const str = field.toString().replace(/"/g, '""');
+                    return `"${str}"`;
+                };
+
+                let csvContent = "Nama Pegawai;NIP;Jabatan;Jenis Cuti;Tgl Mulai;Tgl Selesai;Durasi (Hari);Status;Alasan\r\n";
 
                 filteredCuti.forEach(cuti => {
-                    const [startDate, endDate] = cuti.tanggal.split(' - ');
+                    const userName = cuti.user ? cuti.user.name : '-';
+                    const userNip = cuti.user ? cuti.user.nip : '-';
+                    const userJab = cuti.user ? cuti.user.jabatan : '-';
+                    
                     const row = [
-                        sanitizeCsvField(cuti.nama),
-                        sanitizeCsvField(cuti.nip, true),
-                        sanitizeCsvField(cuti.jabatan),
-                        sanitizeCsvField(cuti.jenis),
-                        sanitizeCsvField(startDate),
-                        sanitizeCsvField(endDate),
+                        sanitizeCsvField(userName),
+                        sanitizeCsvField(userNip),
+                        sanitizeCsvField(userJab),
+                        sanitizeCsvField(cuti.jenis_cuti),
+                        sanitizeCsvField(cuti.tanggal_mulai),
+                        sanitizeCsvField(cuti.tanggal_selesai),
                         sanitizeCsvField(cuti.durasi),
+                        sanitizeCsvField(cuti.status),
                         sanitizeCsvField(cuti.alasan)
                     ].join(";");
                     csvContent += row + "\r\n";
@@ -528,15 +430,154 @@
                 const link = document.createElement("a");
                 const url = URL.createObjectURL(blob);
                 link.setAttribute("href", url);
-                link.setAttribute("download", `laporan_cuti_${year}_${month}.csv`);
+                link.setAttribute("download", `Laporan_Cuti_${month}_${year}.csv`);
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
                 
-                addActivityLog(`Mengunduh laporan cuti untuk bulan ${month}-${year}`);
                 closeReportModal();
             });
 
+            // --- FUNGSI KALENDER PINTAR & POPUP DETAIL ---
+            const calendarModal = document.getElementById('calendarModal');
+            const openCalendarModalBtn = document.getElementById('openCalendarModalBtn');
+            const closeCalendarModalBtn = document.getElementById('closeCalendarModal');
+            const calendarDays = document.getElementById('calendarDays');
+            const currentMonthYear = document.getElementById('currentMonthYear');
+            const prevMonthBtn = document.getElementById('prevMonth');
+            const nextMonthBtn = document.getElementById('nextMonth');
+
+            // Setup Modal Detail Tanggal
+            const calendarDetailModal = document.getElementById('calendarDetailModal');
+            const closeCalendarDetailModalBtn = document.getElementById('closeCalendarDetailModal');
+            const btnTutupCalendarDetail = document.getElementById('btnTutupCalendarDetail');
+            const calendarDetailTitle = document.getElementById('calendarDetailTitle');
+            const calendarDetailList = document.getElementById('calendarDetailList');
+            
+            function closeCalendarDetail() {
+                calendarDetailModal.classList.remove('show');
+                setTimeout(() => calendarDetailModal.classList.add('hidden'), 300);
+            }
+            closeCalendarDetailModalBtn.addEventListener('click', closeCalendarDetail);
+            btnTutupCalendarDetail.addEventListener('click', closeCalendarDetail);
+
+            let currentCalDate = new Date();
+            let currentMonth = currentCalDate.getMonth();
+            let currentYear = currentCalDate.getFullYear();
+
+            const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+            // Fungsi Membuka Popup Detail
+            window.showCalendarDetail = function(day, month, year, leaves) {
+                // Set Judul (Contoh: 15 Agustus 2026)
+                calendarDetailTitle.textContent = `${day} ${monthNames[month]} ${year}`;
+                
+                // Kosongkan list sebelumnya
+                calendarDetailList.innerHTML = '';
+                
+                leaves.forEach(leave => {
+                    const fullName = leave.user ? leave.user.name : 'Seseorang';
+                    const jenisCuti = leave.jenis_cuti;
+                    const inisial = fullName.charAt(0).toUpperCase();
+                    
+                    // Card elegan untuk masing-masing orang
+                    const html = `
+                        <div class="flex items-center p-3 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors">
+                            <div class="w-10 h-10 rounded-full bg-hijau-100 text-hijau-600 flex items-center justify-center font-bold text-lg shrink-0 mr-3 shadow-sm border border-hijau-200">
+                                ${inisial}
+                            </div>
+                            <div>
+                                <p class="font-bold text-gray-800 text-sm">${fullName}</p>
+                                <p class="text-xs text-gray-500 mt-0.5"><span class="font-semibold text-hijau-600">${jenisCuti}</span> &bull; ${leave.durasi} Hari</p>
+                            </div>
+                        </div>
+                    `;
+                    calendarDetailList.insertAdjacentHTML('beforeend', html);
+                });
+                
+                calendarDetailModal.classList.remove('hidden');
+                setTimeout(() => calendarDetailModal.classList.add('show'), 10);
+            };
+
+            function renderCalendar(month, year) {
+                calendarDays.innerHTML = '';
+                currentMonthYear.textContent = `${monthNames[month]} ${year}`;
+
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                const today = new Date();
+                const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
+
+                // Loop kotak kosong sebelum tanggal 1
+                for (let i = 0; i < firstDay; i++) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'calendar-day other-month';
+                    calendarDays.appendChild(emptyDiv);
+                }
+
+                // Loop tanggal 1 sampai akhir bulan
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'calendar-day current-month';
+                    
+                    if (isCurrentMonth && i === today.getDate()) {
+                        dayDiv.classList.add('today');
+                    }
+
+                    // Format tanggal YYYY-MM-DD
+                    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                    
+                    // Filter siapa saja yang cutinya "Disetujui" dan mencakup tanggal ini
+                    const leavesOnThisDay = semuaCutiData.filter(cuti => {
+                        if (cuti.status !== 'Disetujui') return false;
+                        return dateString >= cuti.tanggal_mulai && dateString <= cuti.tanggal_selesai;
+                    });
+
+                    let contentHtml = `<div class="day-number">${i}</div>`;
+                    
+                    if (leavesOnThisDay.length > 0) {
+                        dayDiv.classList.add('has-leave');
+                        
+                        // Menampilkan Nama Depan Pegawai yang Cuti
+                        leavesOnThisDay.forEach(leave => {
+                            const firstName = leave.user ? leave.user.name.split(' ')[0] : 'Seseorang';
+                            contentHtml += `<div class="leave-names" title="${leave.jenis_cuti}">${firstName}</div>`;
+                        });
+
+                        // EVENT LISTENER KLIK (Akan membuka popup Detail)
+                        dayDiv.addEventListener('click', function() {
+                            showCalendarDetail(i, month, year, leavesOnThisDay);
+                        });
+                    }
+
+                    dayDiv.innerHTML = contentHtml;
+                    calendarDays.appendChild(dayDiv);
+                }
+            }
+
+            openCalendarModalBtn.addEventListener('click', () => {
+                renderCalendar(currentMonth, currentYear);
+                calendarModal.classList.remove('hidden');
+                setTimeout(() => calendarModal.classList.add('show'), 10);
+            });
+
+            closeCalendarModalBtn.addEventListener('click', () => {
+                calendarModal.classList.remove('show');
+                setTimeout(() => calendarModal.classList.add('hidden'), 300);
+            });
+
+            prevMonthBtn.addEventListener('click', () => {
+                currentMonth--;
+                if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+                renderCalendar(currentMonth, currentYear);
+            });
+
+            nextMonthBtn.addEventListener('click', () => {
+                currentMonth++;
+                if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+                renderCalendar(currentMonth, currentYear);
+            });
         });
     </script>
 </body>

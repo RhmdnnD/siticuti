@@ -31,11 +31,18 @@ Route::middleware('auth')->group(function () {
         return view('form_pengajuan', compact('jenisCuti'));
     });
 
-    Route::post('/pengajuan', [CutiController::class, 'store']);
+    Route::get('/pengajuan', [\App\Http\Controllers\CutiController::class, 'create']);
+    Route::post('/pengajuan', [\App\Http\Controllers\CutiController::class, 'store']);
+
+    Route::get('/pengajuan/{id}/batal', [\App\Http\Controllers\CutiController::class, 'batalkan']);
 
     Route::get('/profil', function () {
         return view('profil_asn');
     });
+
+    // --- RUTE PROFIL ASN ---
+    Route::get('/profil', [\App\Http\Controllers\DashboardController::class, 'profil']);
+    Route::post('/profil/update', [\App\Http\Controllers\DashboardController::class, 'updateProfil']);
 });
 
 // --- ROUTE KHUSUS ADMIN (WAJIB LOGIN) ---
@@ -43,10 +50,16 @@ Route::middleware('auth')->prefix('admin')->group(function () {
     
     Route::get('/', [AdminController::class, 'index']);
 
+    Route::get('/admin', [\App\Http\Controllers\AdminController::class, 'index']);
+    Route::post('/admin/cuti/{id}/status', [\App\Http\Controllers\AdminController::class, 'updateStatus']);
+
+    Route::get('/laporan/export', [AdminController::class, 'exportLaporan']);
+
     Route::post('/cuti/{id}/status', [AdminController::class, 'updateStatus']);
 
     Route::get('/asn', [AsnController::class, 'index']);
     Route::post('/asn', [AsnController::class, 'store']);
+    Route::post('/asn/{id}/update', [AsnController::class, 'update']);
     Route::get('/asn/{id}/hapus', [AsnController::class, 'destroy']);
 
     Route::get('/atasan', [AtasanController::class, 'index']);
