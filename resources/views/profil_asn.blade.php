@@ -40,7 +40,9 @@
                 <a href="{{ url('/profil') }}" class="flex items-center px-4 py-2.5 text-white bg-hijau-500 rounded-lg font-semibold"><i class="bi bi-person-fill mr-3"></i> Profil Saya</a>
             </nav>
             <div class="p-4 mt-auto">
-                <a href="{{ url('/logout') }}" onclick="return confirm('Apakah Anda yakin ingin keluar?')" class="flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold transition-colors"><i class="bi bi-box-arrow-right mr-3"></i> Logout</a>
+                <a href="{{ url('/logout') }}" class="link-confirm flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold" data-title="Keluar dari Sistem?" data-text="Anda harus login kembali untuk masuk." data-icon="warning">
+                    <i class="bi bi-box-arrow-right mr-3"></i> Logout
+                </a>
             </div>
         </aside>
 
@@ -57,17 +59,6 @@
                 <h1 class="text-3xl font-bold text-gray-800">Profil Saya</h1>
                 <p class="text-gray-500 mt-1">Kelola informasi data diri dan keamanan akun Anda.</p>
             </div>
-
-            @if(session('success'))
-                <div class="mb-6 p-4 bg-hijau-50 border border-hijau-200 text-hijau-700 rounded-lg font-semibold flex items-center">
-                    <i class="bi bi-check-circle-fill mr-2"></i> {{ session('success') }}
-                </div>
-            @endif
-            @if($errors->any())
-                <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg font-semibold flex items-center">
-                    <i class="bi bi-exclamation-triangle-fill mr-2"></i> {{ $errors->first() }}
-                </div>
-            @endif
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
                 
@@ -239,5 +230,6 @@
             }
         });
     </script>
+    @include('components.notifikasi')
 </body>
 </html>

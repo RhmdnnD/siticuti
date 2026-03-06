@@ -96,7 +96,9 @@
             </nav>
 
             <div class="p-4 mt-auto">
-                <a href="{{ url('/logout') }}" class="flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold"><i class="bi bi-box-arrow-right mr-3"></i> Logout</a>
+                <a href="{{ url('/logout') }}" class="link-confirm flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold" data-title="Keluar dari Sistem?" data-text="Anda harus login kembali untuk masuk." data-icon="warning">
+                    <i class="bi bi-box-arrow-right mr-3"></i> Logout
+                </a>
             </div>
         </aside>
 
@@ -108,12 +110,6 @@
                 </div>
                 <button id="menu-toggle" class="text-2xl text-gray-700 p-2"><i class="bi bi-list"></i></button>
             </header>
-
-            @if(session('success'))
-                <div class="bg-hijau-100 border-l-4 border-hijau-500 text-hijau-700 p-4 mb-6 rounded-lg font-semibold flex items-center">
-                    <i class="bi bi-check-circle-fill mr-2 text-xl"></i> {{ session('success') }}
-                </div>
-            @endif
 
             <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
                 <div>
@@ -175,19 +171,21 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2 self-end sm:self-center">
+    
                                     <button type="button" onclick="bukaDetailModal({{ json_encode($p) }})" title="Lihat Detail" class="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"><i class="bi bi-eye-fill"></i></button>
                                     
-                                    <form action="{{ url('/admin/cuti/'.$p->id.'/status') }}" method="POST" class="inline">
+                                    <form action="{{ url('/admin/cuti/'.$p->id.'/status') }}" method="POST" class="form-confirm inline" data-title="Tolak Pengajuan Cuti?" data-text="Pegawai akan menerima status penolakan ini." data-icon="warning" data-btn-confirm="bg-red-500 hover:bg-red-600 text-white">
                                         @csrf
                                         <input type="hidden" name="status" value="Ditolak">
-                                        <button type="submit" onclick="return confirm('Yakin ingin menolak cuti ini?')" title="Tolak Pengajuan" class="px-3 py-1.5 rounded-lg bg-merah-100 text-merah-700 hover:bg-red-200 font-semibold flex items-center gap-1.5 transition-colors"><i class="bi bi-x-lg"></i> <span class="hidden sm:inline">Tolak</span></button>
+                                        <button type="submit" title="Tolak Pengajuan" class="px-3 py-1.5 rounded-lg bg-merah-100 text-merah-700 hover:bg-red-200 font-semibold flex items-center gap-1.5 transition-colors"><i class="bi bi-x-lg"></i> <span class="hidden sm:inline">Tolak</span></button>
                                     </form>
 
-                                    <form action="{{ url('/admin/cuti/'.$p->id.'/status') }}" method="POST" class="inline">
+                                    <form action="{{ url('/admin/cuti/'.$p->id.'/status') }}" method="POST" class="form-confirm inline" data-title="Setujui Pengajuan Cuti?" data-text="Cuti akan disetujui. (Sisa cuti otomatis berkurang khusus untuk Cuti Tahunan)" data-icon="question" data-btn-confirm="bg-hijau-500 hover:bg-hijau-600 text-white">
                                         @csrf
                                         <input type="hidden" name="status" value="Disetujui">
-                                        <button type="submit" onclick="return confirm('Yakin ingin menyetujui cuti ini?')" title="Setujui Pengajuan" class="px-3 py-1.5 rounded-lg bg-hijau-100 text-hijau-700 hover:bg-hijau-200 font-semibold flex items-center gap-1.5 transition-colors"><i class="bi bi-check-lg"></i> <span class="hidden sm:inline">Setujui</span></button>
+                                        <button type="submit" title="Setujui Pengajuan" class="px-3 py-1.5 rounded-lg bg-hijau-100 text-hijau-700 hover:bg-hijau-200 font-semibold flex items-center gap-1.5 transition-colors"><i class="bi bi-check-lg"></i> <span class="hidden sm:inline">Setujui</span></button>
                                     </form>
+                                    
                                 </div>
                             </li>
                         @empty
@@ -580,5 +578,6 @@
             });
         });
     </script>
+    @include('components.notifikasi')
 </body>
 </html>

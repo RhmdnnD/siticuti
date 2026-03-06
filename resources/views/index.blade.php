@@ -74,7 +74,9 @@
                 <a href="{{ url('/profil') }}" class="flex items-center px-4 py-2.5 text-gray-600 hover:bg-slate-100 rounded-lg font-semibold"><i class="bi bi-person-fill mr-3"></i> Profil Saya</a>
             </nav>
             <div class="p-4 mt-auto">
-                <a href="{{ url('/logout') }}" id="logoutButton" class="flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold"><i class="bi bi-box-arrow-right mr-3"></i> Logout</a>
+                <a href="{{ url('/logout') }}" class="link-confirm flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold" data-title="Keluar dari Sistem?" data-text="Anda harus login kembali untuk masuk." data-icon="warning">
+                    <i class="bi bi-box-arrow-right mr-3"></i> Logout
+                </a>
             </div>
         </aside>
 
@@ -91,17 +93,6 @@
                 <h1 class="text-3xl font-bold text-gray-800">Selamat Datang, {{ explode(' ', $user->name)[0] }}!</h1>
                 <p class="text-gray-500 mt-1">Berikut adalah ringkasan dan aksi cepat untuk manajemen cuti Anda.</p>
             </div>
-
-            @if(session('success'))
-                <div class="mb-6 p-4 bg-hijau-50 border border-hijau-200 text-hijau-700 rounded-lg font-semibold flex items-center">
-                    <i class="bi bi-check-circle-fill mr-2"></i> {{ session('success') }}
-                </div>
-            @endif
-            @if($errors->any())
-                <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg font-semibold flex items-center">
-                    <i class="bi bi-exclamation-triangle-fill mr-2"></i> {{ $errors->first() }}
-                </div>
-            @endif
 
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 <div class="xl:col-span-2 space-y-8">
@@ -147,7 +138,7 @@
                                         <div class="flex items-center gap-2">
                                             @if ($cuti->status === 'Menunggu')
                                                 <span class="px-3 py-1 text-xs rounded-full {{ $statusClass }} font-bold hidden sm:inline-block">{{ $cuti->status }}</span>
-                                                <a href="{{ url('/pengajuan/'.$cuti->id.'/batal') }}" onclick="return confirm('Anda yakin ingin membatalkan pengajuan ini?')" class="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded-full hover:bg-red-200 font-semibold flex items-center gap-1 transition-colors"><i class="bi bi-x-circle-fill"></i> Batalkan</a>
+                                                <a href="{{ url('/pengajuan/'.$cuti->id.'/batal') }}" class="link-confirm text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded-full hover:bg-red-200 font-semibold flex items-center gap-1 transition-colors" data-title="Batalkan Pengajuan?" data-text="Anda yakin ingin membatalkan pengajuan ini? Sisa cuti Anda akan dikembalikan." data-icon="warning" data-btn-confirm="bg-red-500 hover:bg-red-600 text-white"><i class="bi bi-x-circle-fill"></i> Batalkan</a>
                                             @elseif ($cuti->status === 'Disetujui')
                                                 <span class="px-3 py-1 text-xs rounded-full {{ $statusClass }} font-bold hidden sm:inline-block">{{ $cuti->status }}</span>
                                                 <button data-id="{{ $cuti->id }}" class="btn-download text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full hover:bg-blue-200 font-semibold flex items-center gap-1 transition-colors shadow-sm"><i class="bi bi-printer-fill"></i> Cetak PDF</button>
@@ -710,5 +701,6 @@
             }
         });
     </script>
+    @include('components.notifikasi')
 </body>
 </html>

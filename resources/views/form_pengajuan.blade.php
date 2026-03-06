@@ -42,7 +42,9 @@
                 <a href="{{ url('/profil') }}" class="flex items-center px-4 py-2.5 text-gray-600 hover:bg-slate-100 rounded-lg font-semibold"><i class="bi bi-person-fill mr-3"></i> Profil Saya</a>
             </nav>
             <div class="p-4 mt-auto">
-                <a href="{{ url('/logout') }}" onclick="return confirm('Yakin ingin keluar?')" class="flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold"><i class="bi bi-box-arrow-right mr-3"></i> Logout</a>
+                <a href="{{ url('/logout') }}" class="link-confirm flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold" data-title="Keluar dari Sistem?" data-text="Anda harus login kembali untuk masuk." data-icon="warning">
+                    <i class="bi bi-box-arrow-right mr-3"></i> Logout
+                </a>
             </div>
         </aside>
 
@@ -60,12 +62,6 @@
                     <h1 class="text-3xl font-bold text-gray-800">Form Pengajuan Cuti</h1>
                     <p class="text-gray-500 mt-1">Silakan lengkapi data di bawah ini untuk mengajukan cuti.</p>
                 </div>
-
-                @if($errors->any())
-                    <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg font-semibold flex items-center">
-                        <i class="bi bi-exclamation-triangle-fill mr-2"></i> {{ $errors->first() }}
-                    </div>
-                @endif
 
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="p-6 md:p-8">
@@ -287,5 +283,6 @@
             });
         });
     </script>
+    @include('components.notifikasi')
 </body>
 </html>

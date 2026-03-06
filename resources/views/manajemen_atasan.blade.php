@@ -64,7 +64,9 @@
             </nav>
 
             <div class="p-4 mt-auto">
-                <a href="{{ url('/logout') }}" class="flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold"><i class="bi bi-box-arrow-right mr-3"></i> Logout</a>
+                <a href="{{ url('/logout') }}" class="link-confirm flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold" data-title="Keluar dari Sistem?" data-text="Anda harus login kembali untuk masuk." data-icon="warning">
+                    <i class="bi bi-box-arrow-right mr-3"></i> Logout
+                </a>
             </div>
         </aside>
 
@@ -81,13 +83,6 @@
                 <h1 class="text-3xl font-bold text-gray-800">Manajemen Data Atasan</h1>
                 <p class="text-gray-500 mt-1">Tambah dan kelola data atasan untuk ASN.</p>
             </div>
-
-            @if(session('success'))
-                <div class="mb-4 p-4 bg-hijau-100 text-hijau-700 rounded-lg font-semibold">{{ session('success') }}</div>
-            @endif
-            @if($errors->any())
-                <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-lg font-semibold">{{ $errors->first() }}</div>
-            @endif
 
             <div class="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
                 <div class="relative w-full md:w-1/3">
@@ -213,5 +208,6 @@
             });
         });
     </script>
+    @include('components.notifikasi')
 </body>
 </html>

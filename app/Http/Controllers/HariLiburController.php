@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\HariLibur;
+// 1. TAMBAHKAN DUA BARIS INI UNTUK MENGHILANGKAN ERROR
+use App\Models\LogAktivitas;
+use Illuminate\Support\Facades\Auth;
 
 class HariLiburController extends Controller
 {
@@ -27,6 +30,7 @@ class HariLiburController extends Controller
             'keterangan' => $request->keterangan
         ]);
 
+        // Karena LogAktivitas dan Auth sudah di-import di atas, baris ini akan aman
         LogAktivitas::create([
             'user_name' => Auth::user()->name,
             'role' => Auth::user()->role,
@@ -39,7 +43,16 @@ class HariLiburController extends Controller
     // Menghapus hari libur
     public function destroy($id)
     {
-        HariLibur::findOrFail($id)->delete();
+        $libur = HariLibur::findOrFail($id);
+        
+        LogAktivitas::create([
+            'user_name' => Auth::user()->name,
+            'role' => Auth::user()->role,
+            'aksi' => 'Menghapus Hari Libur: ' . $libur->keterangan
+        ]);
+
+        $libur->delete();
+
         return back()->with('success', 'Hari libur berhasil dihapus!');
     }
 }

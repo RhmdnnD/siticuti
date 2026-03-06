@@ -48,7 +48,9 @@
             </nav>
 
             <div class="p-4 mt-auto">
-                <a href="{{ url('/logout') }}" class="flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold transition-colors"><i class="bi bi-box-arrow-right mr-3"></i> Logout</a>
+                <a href="{{ url('/logout') }}" class="link-confirm flex items-center justify-center w-full px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-semibold" data-title="Keluar dari Sistem?" data-text="Anda harus login kembali untuk masuk." data-icon="warning">
+                    <i class="bi bi-box-arrow-right mr-3"></i> Logout
+                </a>
             </div>
         </aside>
 
@@ -67,19 +69,13 @@
                     <p class="text-gray-500 mt-1">Pantau seluruh riwayat aktivitas yang terjadi di dalam SITI CUTI.</p>
                 </div>
                 
-                <form action="{{ url('/admin/log/clear') }}" method="POST" class="w-full md:w-auto" onsubmit="return confirm('Peringatan: Tindakan ini akan MENGHAPUS SEMUA riwayat log aktivitas secara permanen. Anda yakin?');">
+                <form action="{{ url('/admin/log/clear') }}" method="POST" class="form-confirm w-full md:w-auto" data-title="Bersihkan Semua Log?" data-text="Peringatan: Tindakan ini akan MENGHAPUS SEMUA riwayat log aktivitas secara permanen. Anda yakin?" data-icon="warning" data-btn-confirm="bg-red-500 hover:bg-red-600 text-white">
                     @csrf
                     <button type="submit" class="w-full bg-red-50 text-red-600 font-bold py-2.5 px-5 rounded-lg shadow-sm hover:bg-red-100 flex items-center justify-center space-x-2 transition-colors">
                         <i class="bi bi-trash3-fill"></i><span>Bersihkan Semua Log</span>
                     </button>
                 </form>
             </div>
-
-            @if(session('success'))
-                <div class="mb-6 p-4 bg-hijau-50 border border-hijau-200 text-hijau-700 rounded-lg font-semibold flex items-center">
-                    <i class="bi bi-check-circle-fill mr-2"></i> {{ session('success') }}
-                </div>
-            @endif
 
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8">
                 <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center"><i class="bi bi-gear-fill text-slate-400 mr-2"></i> Pengaturan Penyimpanan Log</h3>
@@ -216,7 +212,6 @@
                     
                     const labelText = event.target.nextElementSibling.textContent.trim();
                     
-                    // Segera kirim ke server dan refresh tabel agar log lamanya langsung menghilang dari layar
                     if (selectedValue !== 'never') {
                         fetch('{{ url("/admin/log/autoclean") }}', {
                             method: 'POST',
@@ -226,11 +221,36 @@
                             },
                             body: JSON.stringify({ months: selectedValue })
                         }).then(() => {
-                            alert(`Sistem telah otomatis menghapus log yang lebih tua dari ${labelText}.`);
-                            window.location.reload(); // Refresh layar agar bersih
+                            // --- POPUP SWEETALERT PENGGANTI ALERT() LAMA ---
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Pembersihan Berhasil!',
+                                text: `Sistem telah otomatis menghapus log yang lebih tua dari ${labelText}.`,
+                                showConfirmButton: false,
+                                timer: 2000, // Tampil selama 2 detik
+                                timerProgressBar: true,
+                                customClass: {
+                                    popup: 'rounded-2xl shadow-xl border border-slate-100',
+                                    title: 'text-gray-800 font-bold'
+                                }
+                            }).then(() => {
+                                window.location.reload(); // Refresh setelah popup selesai/hilang
+                            });
                         });
                     } else {
-                        alert('Pengaturan disimpan. Log tidak akan dihapus otomatis.');
+                        // --- POPUP SWEETALERT INFO ---
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Pengaturan Disimpan!',
+                            text: 'Log tidak akan dihapus otomatis.',
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true,
+                            customClass: {
+                                popup: 'rounded-2xl shadow-xl border border-slate-100',
+                                title: 'text-gray-800 font-bold'
+                            }
+                        });
                     }
                 });
             });
@@ -238,5 +258,6 @@
             initAutoDeleteSetting(); // Eksekusi saat masuk
         });
     </script>
+    @include('components.notifikasi')
 </body>
 </html>
