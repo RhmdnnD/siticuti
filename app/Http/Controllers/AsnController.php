@@ -19,7 +19,6 @@ class AsnController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi inputan utama
         $request->validate([
             'name' => 'required',
             'nip' => 'required|unique:users,nip', 
@@ -28,7 +27,6 @@ class AsnController extends Controller
             'jabatan' => 'required'
         ]);
 
-        // Masukkan semua data dari form ke database
         User::create([
             'name' => $request->name,
             'nip' => $request->nip,
@@ -45,13 +43,12 @@ class AsnController extends Controller
             'atasan1' => $request->atasan1,
             'atasan2' => $request->atasan2,
             'tmt' => $request->tmt,
-            'cuti_diambil' => 0 // Awal mula belum mengambil cuti
+            'cuti_diambil' => 0
         ]);
 
         return back()->with('success', 'Data ASN berhasil ditambahkan! Jika password dikosongkan, otomatis menggunakan "password123".');
     }
     
-    // Menghapus data ASN
     public function destroy($id)
     {
         $user = User::findOrFail($id);
@@ -60,12 +57,10 @@ class AsnController extends Controller
         return back()->with('success', 'Data ASN berhasil dihapus!');
     }
 
-    // Memperbarui data ASN & Reset Password
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
 
-        // Validasi inputan (Kecuali NIP dan Username miliknya sendiri)
         $request->validate([
             'name' => 'required',
             'nip' => 'required|unique:users,nip,' . $id,
@@ -73,7 +68,6 @@ class AsnController extends Controller
             'jabatan' => 'required'
         ]);
 
-        // Update data utama
         $user->update([
             'name' => $request->name,
             'nip' => $request->nip,
@@ -90,7 +84,6 @@ class AsnController extends Controller
             'tmt' => $request->tmt,
         ]);
 
-        // Jika kolom password diisi oleh Admin, berarti Admin mereset passwordnya
         if ($request->filled('password')) {
             $user->update([
                 'password' => \Illuminate\Support\Facades\Hash::make($request->password)
