@@ -90,4 +90,22 @@ Route::middleware('auth')->group(function () {
         
     });
 
+    Route::get('/install-database-rahasia', function () {
+    try {
+        // 1. Jalankan Migrasi
+        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', [
+            '--force' => true,
+        ]);
+        
+        // 2. (Opsional) Jalankan Seeder jika Anda punya data awal
+        \Illuminate\Support\Facades\Artisan::call('db:seed', [
+            '--force' => true,
+        ]);
+
+        return '<h1>Database TiDB Berhasil Diinstall!</h1><a href="/">Kembali ke Login</a>';
+    } catch (\Exception $e) {
+        return 'Gagal install database: ' . $e->getMessage();
+    }
+});
+
 });
