@@ -1,12 +1,10 @@
 {
     "version": 2,
-    "framework": null,
     "functions": {
         "api/*.php": {
             "runtime": "vercel-php@0.8.0"
         }
     },
-    "outputDirectory": ".",
     "routes": [
         {
             "src": "/(css|js|favicon.png|storage)/(.*)",
