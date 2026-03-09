@@ -9,7 +9,15 @@
     },
     "routes": [
         {
-            "src": "/(css|js|favicon\\.png|storage|build)/(.*)",
+            "src": "/favicon.png",
+            "dest": "/public/favicon.png"
+        },
+        {
+            "src": "/favicon.ico",
+            "dest": "/public/favicon.ico"
+        },
+        {
+            "src": "/(css|js|storage|build)/(.*)",
             "dest": "/public/$1/$2"
         },
         {
