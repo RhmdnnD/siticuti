@@ -30,15 +30,14 @@ Route::middleware('guest')->group(function () {
 // ROUTE LOGOUT
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// --- Rute Rahasia untuk Instalasi Database di Vercel ---
 Route::get('/install-database-rahasia', function () {
     try {
-        // 1. Jalankan Migrasi
+        // Jalankan Migrasi
         \Illuminate\Support\Facades\Artisan::call('migrate:fresh', [
             '--force' => true,
         ]);
         
-        // 2. (Opsional) Jalankan Seeder jika Anda punya data awal
+        // Jalankan Seeder
         \Illuminate\Support\Facades\Artisan::call('db:seed', [
             '--force' => true,
         ]);
