@@ -165,7 +165,7 @@
                                     <td class="p-4 text-center">
                                         <div class="flex items-center justify-center gap-1">
                                             <button type="button" onclick="editAsn({{ $a }})" title="Edit Data" class="text-slate-400 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition-colors"><i class="bi bi-pencil-square text-lg"></i></button>
-                                            <a href="{{ url('/admin/asn/'.$a->id.'/hapus') }}" onclick="return confirm('Yakin ingin menghapus ASN {{ $a->name }}?')" title="Hapus Akun" class="text-slate-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-colors"><i class="bi bi-trash3 text-lg"></i></a>
+                                            <a href="{{ url('/admin/asn/'.$a->id.'/hapus') }}" class="link-confirm text-slate-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-colors" data-title="Hapus Akun ASN?" data-text="Yakin ingin menghapus ASN {{ $a->name }}? Semua datanya akan terhapus." data-icon="warning" data-btn-confirm="bg-red-500 hover:bg-red-600 text-white" title="Hapus Akun"><i class="bi bi-trash3 text-lg"></i></a>
                                         </div>
                                     </td>
                                 </tr>
